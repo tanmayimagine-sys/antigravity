@@ -23,6 +23,7 @@ import {
   DataSource,
   AuditEvent,
   BorrowingListing,
+  InvestorCommitment,
 } from "@/lib/types";
 
 // Clone initial seed data for runtime modifications
@@ -96,6 +97,53 @@ let initialListings: BorrowingListing[] = [
 ];
 
 let borrowingListingsStore: BorrowingListing[] = JSON.parse(JSON.stringify(initialListings));
+
+let initialCommitments: InvestorCommitment[] = [
+  {
+    id: "cmt_seed_1",
+    listingId: "list_stat_01",
+    businessId: "biz_stationery",
+    businessName: "Vidya Stationery & Xerox",
+    businessCategory: "Stationery & Document Centre",
+    city: "Pune",
+    funderName: "Kunal Shah (Growth Syndicate)",
+    investedAmountPaise: 5000000, // ₹50,000
+    revenueSharePercent: 6.5,
+    repaymentCapMultiplier: 1.15,
+    totalReturnCapPaise: 5750000, // ₹57,500 total return cap
+    committedAt: "2026-10-21T11:30:00Z",
+    monthlySalesPaise: 51630000,
+    estimatedDailyPayoutPaise: 111865, // ~₹1,119 / day
+    estimatedPaybackDays: 52, // 52 days to full cap
+    recoveryProbability: "96% High Confidence",
+    riskRating: "Low Risk",
+    repaidSoFarPaise: 1420000, // ₹14,200 repaid so far
+    status: "recovering",
+  },
+  {
+    id: "cmt_seed_2",
+    listingId: "list_cafe_01",
+    businessId: "biz_cafe",
+    businessName: "Chai & Chutney All-Day Café",
+    businessCategory: "Quick-Service Café",
+    city: "New Delhi",
+    funderName: "Kunal Shah (Growth Syndicate)",
+    investedAmountPaise: 18000000, // ₹1,80,000
+    revenueSharePercent: 8.0,
+    repaymentCapMultiplier: 1.15,
+    totalReturnCapPaise: 20700000, // ₹2,07,000 total return cap
+    committedAt: "2026-10-20T12:00:00Z",
+    monthlySalesPaise: 72030000,
+    estimatedDailyPayoutPaise: 192080, // ~₹1,921 / day
+    estimatedPaybackDays: 108,
+    recoveryProbability: "98% High Confidence",
+    riskRating: "Low Risk",
+    repaidSoFarPaise: 5200000, // ₹52,000 repaid so far
+    status: "recovering",
+  },
+];
+
+let investorCommitmentsStore: InvestorCommitment[] = JSON.parse(JSON.stringify(initialCommitments));
 let auditLogs: AuditEvent[] = [
   {
     id: "aud_01",
@@ -124,6 +172,8 @@ export const db = {
   reset: () => {
     dbInstance = cloneSeedData();
     auditLogs = [];
+    borrowingListingsStore = JSON.parse(JSON.stringify(initialListings));
+    investorCommitmentsStore = JSON.parse(JSON.stringify(initialCommitments));
     return true;
   },
 
@@ -359,7 +409,7 @@ export const db = {
   commitInvestment: (
     listingId: string,
     offer: { funderName: string; amountPaise: number; revenueSharePercent: number }
-  ): { success: boolean; listing: BorrowingListing; offer: FundingOffer } | null => {
+  ): { success: boolean; listing: BorrowingListing; offer: FundingOffer; commitment: InvestorCommitment } | null => {
     const listing = borrowingListingsStore.find((l) => l.id === listingId);
     if (!listing) return null;
 
@@ -369,6 +419,12 @@ export const db = {
       listing.status = "funded";
     }
 
+    const totalCapPaise = Math.round(offer.amountPaise * 1.15);
+    const monthlySales = listing.grossSales30dPaise || 50000000;
+    const dailyAvgSales = Math.round(monthlySales / 30);
+    const dailyPayoutPaise = Math.round(dailyAvgSales * (offer.revenueSharePercent / 100));
+    const paybackDays = dailyPayoutPaise > 0 ? Math.ceil(totalCapPaise / dailyPayoutPaise) : 90;
+
     // Create a corresponding FundingOffer
     const newOffer: FundingOffer = {
       id: `off_mkt_${Date.now()}`,
@@ -377,7 +433,7 @@ export const db = {
       offerAmountPaise: offer.amountPaise,
       revenueSharePercent: offer.revenueSharePercent,
       repaymentCapMultiplier: 1.15,
-      totalCapPaise: Math.round(offer.amountPaise * 1.15),
+      totalCapPaise,
       estimatedTermMonths: listing.estimatedTermMonths,
       eligibleRevenueDefinition: "Reconciled gross sales from verified POS & UPI QR credits, minus documented refunds.",
       feePaise: 0,
@@ -390,7 +446,39 @@ export const db = {
     }
     dbInstance.fundingOffers[listing.businessId].unshift(newOffer);
 
-    return { success: true, listing, offer: newOffer };
+    // Create Investor Commitment
+    const newCommitment: InvestorCommitment = {
+      id: `cmt_${Date.now()}`,
+      listingId: listing.id,
+      businessId: listing.businessId,
+      businessName: listing.businessName,
+      businessCategory: listing.businessCategory,
+      city: listing.city,
+      funderName: offer.funderName || "Kunal Shah (Growth Syndicate)",
+      investedAmountPaise: offer.amountPaise,
+      revenueSharePercent: offer.revenueSharePercent,
+      repaymentCapMultiplier: 1.15,
+      totalReturnCapPaise: totalCapPaise,
+      committedAt: new Date().toISOString(),
+      monthlySalesPaise: monthlySales,
+      estimatedDailyPayoutPaise: dailyPayoutPaise,
+      estimatedPaybackDays: paybackDays,
+      recoveryProbability: listing.healthScore >= 80 ? "96% Very High" : listing.healthScore >= 70 ? "92% Strong" : "84% Moderate",
+      riskRating: listing.healthScore >= 80 ? "Low Risk" : listing.healthScore >= 70 ? "Moderate Risk" : "Higher Yield",
+      repaidSoFarPaise: 0,
+      status: "active",
+    };
+    investorCommitmentsStore.unshift(newCommitment);
+
+    return { success: true, listing, offer: newOffer, commitment: newCommitment };
+  },
+
+  getInvestorCommitments: (): InvestorCommitment[] => {
+    return investorCommitmentsStore;
+  },
+
+  getInvestorCommitmentsByBusiness: (businessId: string): InvestorCommitment[] => {
+    return investorCommitmentsStore.filter((c) => c.businessId === businessId);
   },
 
   // Reviews & Themes

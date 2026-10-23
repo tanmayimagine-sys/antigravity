@@ -4,8 +4,10 @@ import { BorrowingListing } from "@/lib/types";
 
 export async function GET() {
   const listings = db.getBorrowingListings();
+  const commitments = db.getInvestorCommitments();
   return NextResponse.json({
     listings,
+    commitments,
     disclaimer: "SIMULATED MARKETPLACE. No real money moves. For demonstration & evaluation only.",
   });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useBusiness } from "@/components/shell/BusinessContext";
 import { db } from "@/lib/db";
 import { formatPaise, formatDate } from "@/lib/formatters";
@@ -23,12 +23,15 @@ import {
   Users,
   Check,
   Briefcase,
+  Clock,
+  Calendar,
+  Percent,
 } from "lucide-react";
-import { FundingOffer, LedgerEntry, BorrowingListing } from "@/lib/types";
+import { FundingOffer, LedgerEntry, BorrowingListing, InvestorCommitment } from "@/lib/types";
 
 export default function FundingWorkspacePage() {
   const { activeBusiness, currentUser, isOwner, isInvestor } = useBusiness();
-  const [activeTab, setActiveTab] = useState<"repayments" | "list_business" | "marketplace">("marketplace");
+  const [activeTab, setActiveTab] = useState<"repayments" | "list_business" | "marketplace" | "investments">("marketplace");
 
   const offers = db.getFundingOffers(activeBusiness.id);
   const activeOffer = offers[0] || db.getFundingOffers("biz_stationery")[0];
@@ -40,6 +43,22 @@ export default function FundingWorkspacePage() {
 
   // Marketplace Listings State
   const [listings, setListings] = useState<BorrowingListing[]>(db.getBorrowingListings());
+  const [commitments, setCommitments] = useState<InvestorCommitment[]>(db.getInvestorCommitments());
+
+  // Fetch latest marketplace data on mount
+  useEffect(() => {
+    fetch("/api/funding/marketplace")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.listings && Array.isArray(data.listings)) {
+          setListings(data.listings);
+        }
+        if (data.commitments && Array.isArray(data.commitments)) {
+          setCommitments(data.commitments);
+        }
+      })
+      .catch((err) => console.error("Error fetching marketplace:", err));
+  }, []);
 
   // Owner Listing Form State
   const [borrowAmount, setBorrowAmount] = useState<number>(150000);
@@ -122,10 +141,36 @@ export default function FundingWorkspacePage() {
       if (!res.ok) throw new Error("Investment commit failed");
       const data = await res.json();
 
-      setListings(db.getBorrowingListings());
+      // Immediate real-time state updates in React state!
+      if (data.listing) {
+        setListings((prev) =>
+          prev.map((l) => (l.id === data.listing.id ? data.listing : l))
+        );
+      }
+      if (data.commitments && Array.isArray(data.commitments)) {
+        setCommitments(data.commitments);
+      } else if (data.commitment) {
+        setCommitments((prev) => [data.commitment, ...prev]);
+      }
+
+      // Also sync client-side in-memory db
+      try {
+        db.commitInvestment(investModalListing.id, {
+          funderName: investorName,
+          amountPaise: investAmount * 100,
+          revenueSharePercent: investModalListing.offeredRevenueSharePercent,
+        });
+      } catch {}
+
+      const committedBiz = investModalListing.businessName;
       setInvestModalListing(null);
-      setToast(`Simulated capital of ₹${investAmount.toLocaleString("en-IN")} committed to ${investModalListing.businessName}!`);
-      setTimeout(() => setToast(null), 4500);
+      setToast(`✓ ₹${investAmount.toLocaleString("en-IN")} deposited to ${committedBiz}! Progress bar updated in real time.`);
+
+      // Switch to portfolio tab so investor immediately sees daily payout and recovery stats
+      if (isInvestor) {
+        setActiveTab("investments");
+      }
+      setTimeout(() => setToast(null), 5000);
     } catch {
       setToast("Failed to commit investment.");
     } finally {
@@ -226,18 +271,33 @@ export default function FundingWorkspacePage() {
           <span>Investor Marketplace & Discovery ({listings.length})</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("list_business")}
-          className={`py-2.5 font-semibold transition-colors border-b-2 -mb-px flex items-center gap-2 whitespace-nowrap ${
-            activeTab === "list_business"
-              ? "border-primary text-primary-ink font-bold"
-              : "border-transparent text-text-muted hover:text-text"
-          }`}
-        >
-          <PlusCircle className="w-4 h-4 text-accent" />
-          <span>{isInvestor ? "List Business (Owner Required)" : "List My Business for Borrowing"}</span>
-        </button>
+        {isInvestor ? (
+          <button
+            type="button"
+            onClick={() => setActiveTab("investments")}
+            className={`py-2.5 font-semibold transition-colors border-b-2 -mb-px flex items-center gap-2 whitespace-nowrap ${
+              activeTab === "investments"
+                ? "border-accent text-accent font-bold"
+                : "border-transparent text-text-muted hover:text-text"
+            }`}
+          >
+            <TrendingUp className="w-4 h-4 text-accent" />
+            <span>💼 My Investments & Returns ({commitments.length})</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setActiveTab("list_business")}
+            className={`py-2.5 font-semibold transition-colors border-b-2 -mb-px flex items-center gap-2 whitespace-nowrap ${
+              activeTab === "list_business"
+                ? "border-primary text-primary-ink font-bold"
+                : "border-transparent text-text-muted hover:text-text"
+            }`}
+          >
+            <PlusCircle className="w-4 h-4 text-accent" />
+            <span>List My Business for Borrowing</span>
+          </button>
+        )}
 
         <button
           type="button"
@@ -249,7 +309,7 @@ export default function FundingWorkspacePage() {
           }`}
         >
           <Coins className="w-4 h-4" />
-          <span>{isInvestor ? "Repayments & Cap Ledger (Market)" : "My Repayments & Cap Ledger"}</span>
+          <span>{isInvestor ? "Market Repayments & Cap Ledger" : "My Repayments & Cap Ledger"}</span>
         </button>
       </div>
 
@@ -389,6 +449,196 @@ export default function FundingWorkspacePage() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* TAB: MY INVESTMENTS & PROJECTED RETURNS (FOR INVESTORS) */}
+      {activeTab === "investments" && (
+        <div className="space-y-6 animate-in fade-in">
+          {/* Header */}
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h2 className="text-base font-bold text-text flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-accent" />
+                <span>My Active Investments & Return Projections (Simulated)</span>
+              </h2>
+              <p className="text-xs text-text-muted mt-0.5">
+                Track daily revenue share payouts, repayment cap recovery timelines, and risk assessments for your committed capital.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs px-2.5 py-1 rounded-full bg-accent-soft text-accent font-semibold border border-accent/20">
+                {commitments.length} Active Deployments
+              </span>
+            </div>
+          </div>
+
+          {/* Portfolio Summary KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 rounded-xl border border-border bg-surface space-y-1 shadow-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">
+                Total Capital Deployed
+              </span>
+              <span className="text-xl font-extrabold text-text tabular-nums">
+                {formatPaise(commitments.reduce((acc, c) => acc + c.investedAmountPaise, 0))}
+              </span>
+              <span className="text-[10px] text-text-muted block">Across {commitments.length} verified micro-businesses</span>
+            </div>
+
+            <div className="p-4 rounded-xl border border-border bg-surface space-y-1 shadow-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">
+                Total Return Cap (1.15x)
+              </span>
+              <span className="text-xl font-extrabold text-accent tabular-nums">
+                {formatPaise(commitments.reduce((acc, c) => acc + c.totalReturnCapPaise, 0))}
+              </span>
+              <span className="text-[10px] text-success font-medium block">
+                +15% deterministic profit ceiling
+              </span>
+            </div>
+
+            <div className="p-4 rounded-xl border border-border bg-surface space-y-1 shadow-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">
+                Daily Revenue Share Inflow
+              </span>
+              <span className="text-xl font-extrabold text-primary-ink tabular-nums">
+                ~{formatPaise(commitments.reduce((acc, c) => acc + c.estimatedDailyPayoutPaise, 0))} / day
+              </span>
+              <span className="text-[10px] text-text-muted block">From daily POS & UPI settlements</span>
+            </div>
+
+            <div className="p-4 rounded-xl border border-border bg-surface space-y-1 shadow-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">
+                Average Payback Timeline
+              </span>
+              <span className="text-xl font-extrabold text-text tabular-nums">
+                ~{commitments.length > 0 ? Math.round(commitments.reduce((acc, c) => acc + c.estimatedPaybackDays, 0) / commitments.length) : 0} Days
+              </span>
+              <span className="text-[10px] text-accent font-medium block">To full principal + cap recovery</span>
+            </div>
+          </div>
+
+          {/* Detailed Commitments Cards */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">
+              Individual Business Commitments & Recovery Status
+            </h3>
+
+            {commitments.length === 0 ? (
+              <div className="p-8 text-center rounded-xl border border-dashed border-border bg-surface-2/40 text-text-muted text-xs">
+                No capital committed yet. Explore the Marketplace to review businesses and commit simulated funding.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {commitments.map((c) => {
+                  const capPct = Math.min(100, Math.round((c.repaidSoFarPaise / c.totalReturnCapPaise) * 100));
+                  return (
+                    <div
+                      key={c.id}
+                      className="rounded-xl border border-border bg-surface p-5 space-y-4 shadow-sm hover:border-accent/50 transition-all flex flex-col justify-between"
+                    >
+                      <div className="space-y-3">
+                        {/* Header */}
+                        <div className="flex items-start justify-between border-b border-border pb-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-base text-text">{c.businessName}</h4>
+                              <span className="text-[10px] px-2 py-0.5 rounded bg-accent-soft text-accent font-bold">
+                                {c.riskRating}
+                              </span>
+                            </div>
+                            <span className="text-xs text-text-muted">{c.city} • {c.businessCategory}</span>
+                          </div>
+
+                          <span className="text-[11px] font-mono text-text-muted">
+                            Committed {formatDate(c.committedAt)}
+                          </span>
+                        </div>
+
+                        {/* Financial Parameters Grid */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                          <div className="p-2.5 rounded-lg bg-surface-2 border border-border">
+                            <span className="text-text-muted block text-[10px] font-semibold uppercase">Capital Invested</span>
+                            <span className="text-base font-extrabold text-text tabular-nums">
+                              {formatPaise(c.investedAmountPaise)}
+                            </span>
+                          </div>
+
+                          <div className="p-2.5 rounded-lg bg-surface-2 border border-border">
+                            <span className="text-text-muted block text-[10px] font-semibold uppercase">Offered Terms</span>
+                            <span className="text-base font-extrabold text-accent">
+                              {c.revenueSharePercent}% daily
+                            </span>
+                            <span className="text-[9px] text-text-muted block">1.15x cap ceiling</span>
+                          </div>
+
+                          <div className="p-2.5 rounded-lg bg-surface-2 border border-border">
+                            <span className="text-text-muted block text-[10px] font-semibold uppercase">Total Return Cap</span>
+                            <span className="text-base font-extrabold text-success tabular-nums">
+                              {formatPaise(c.totalReturnCapPaise)}
+                            </span>
+                            <span className="text-[9px] text-success block">+{formatPaise(c.totalReturnCapPaise - c.investedAmountPaise)} gain</span>
+                          </div>
+                        </div>
+
+                        {/* Daily Inflow & Recovery Timing */}
+                        <div className="p-3 rounded-lg bg-primary-soft/30 border border-primary/20 space-y-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-text-muted flex items-center gap-1.5 font-medium">
+                              <Coins className="w-3.5 h-3.5 text-primary-ink" />
+                              <span>Estimated Daily Revenue Share:</span>
+                            </span>
+                            <span className="font-extrabold text-primary-ink text-sm tabular-nums">
+                              ~{formatPaise(c.estimatedDailyPayoutPaise)} / day
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-1 border-t border-primary/10 text-[11px]">
+                            <span className="text-text-muted flex items-center gap-1.5">
+                              <Clock className="w-3 h-3 text-text-muted" />
+                              <span>Expected Recovery Timeline:</span>
+                            </span>
+                            <span className="font-bold text-text">
+                              ~{c.estimatedPaybackDays} Days (~{(c.estimatedPaybackDays / 30).toFixed(1)} Months)
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-text-muted flex items-center gap-1.5">
+                              <ShieldCheck className="w-3 h-3 text-success" />
+                              <span>Recovery Confidence:</span>
+                            </span>
+                            <span className="font-bold text-success">
+                              {c.recoveryProbability}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Repayment Cap Progress */}
+                        <div className="space-y-1.5 pt-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-text-muted text-[11px]">Capital Recovery Progress:</span>
+                            <span className="font-semibold text-text tabular-nums">
+                              {formatPaise(c.repaidSoFarPaise)} / {formatPaise(c.totalReturnCapPaise)} ({capPct}%)
+                            </span>
+                          </div>
+                          <div className="w-full h-2 rounded-full bg-surface-2 overflow-hidden border border-border">
+                            <div
+                              className="h-full bg-accent transition-all duration-slow"
+                              style={{ width: `${Math.max(5, capPct)}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] text-text-muted block">
+                            Daily deductions automatically halt when cumulative payouts reach {formatPaise(c.totalReturnCapPaise)}.
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -725,6 +975,22 @@ export default function FundingWorkspacePage() {
                 <label className="font-semibold text-text block mb-1">
                   How much capital do you wish to commit? (in Rupees)
                 </label>
+                <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                  {[10000, 20000, 50000, 100000].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setInvestAmount(amt)}
+                      className={`px-2.5 py-1 rounded-md text-xs font-semibold border transition-colors ${
+                        investAmount === amt
+                          ? "bg-primary text-on-primary border-primary"
+                          : "bg-surface-2 border-border text-text hover:bg-surface-2/80"
+                      }`}
+                    >
+                      ₹{(amt).toLocaleString("en-IN")}
+                    </button>
+                  ))}
+                </div>
                 <input
                   type="number"
                   min="5000"
@@ -734,9 +1000,54 @@ export default function FundingWorkspacePage() {
                   onChange={(e) => setInvestAmount(Number(e.target.value))}
                   className="w-full p-2.5 rounded-lg border border-border bg-surface text-text text-sm font-bold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                 />
-                <span className="text-[10px] text-text-muted">
+                <span className="text-[10px] text-text-muted mt-0.5 block">
                   Committing ₹{investAmount.toLocaleString("en-IN")} at {investModalListing.offeredRevenueSharePercent}% daily revenue share @ 1.15x cap.
                 </span>
+              </div>
+
+              {/* Live Return & Recovery Preview */}
+              <div className="p-3.5 rounded-xl bg-accent-soft/40 border border-accent/30 space-y-2 text-xs">
+                <div className="flex items-center justify-between font-bold text-accent">
+                  <span className="flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    <span>Live Projected Returns & Payback</span>
+                  </span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-accent/20">Deterministic Model</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-accent/20">
+                  <div>
+                    <span className="text-text-muted block text-[10px]">Daily Revenue Share:</span>
+                    <span className="font-bold text-primary-ink text-xs tabular-nums">
+                      ~₹{Math.round(((investModalListing.grossSales30dPaise || 50000000) / 3000) * (investModalListing.offeredRevenueSharePercent / 100)).toLocaleString("en-IN")} / day
+                    </span>
+                    <span className="text-[9px] text-text-muted block">({investModalListing.offeredRevenueSharePercent}% of daily sales)</span>
+                  </div>
+
+                  <div>
+                    <span className="text-text-muted block text-[10px]">Total Return Cap (1.15x):</span>
+                    <span className="font-bold text-success text-xs tabular-nums">
+                      ₹{Math.round(investAmount * 1.15).toLocaleString("en-IN")}
+                    </span>
+                    <span className="text-[9px] text-success block">(+₹{Math.round(investAmount * 0.15).toLocaleString("en-IN")} cap gain)</span>
+                  </div>
+
+                  <div>
+                    <span className="text-text-muted block text-[10px]">Estimated Payback Time:</span>
+                    <span className="font-bold text-text text-xs">
+                      ~{Math.ceil((investAmount * 1.15) / Math.max(1, ((investModalListing.grossSales30dPaise || 50000000) / 3000) * (investModalListing.offeredRevenueSharePercent / 100)))} Days
+                    </span>
+                    <span className="text-[9px] text-text-muted block">To 100% full cap recovery</span>
+                  </div>
+
+                  <div>
+                    <span className="text-text-muted block text-[10px]">Recovery Probability:</span>
+                    <span className="font-bold text-success text-xs">
+                      {investModalListing.healthScore >= 80 ? "96% High" : "91% Strong"}
+                    </span>
+                    <span className="text-[9px] text-text-muted block">Backed by BHP {investModalListing.healthScore}/100</span>
+                  </div>
+                </div>
               </div>
             </div>
 

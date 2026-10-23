@@ -33,6 +33,9 @@ export async function POST(req: NextRequest) {
       success: true,
       listing: result.listing,
       offer: result.offer,
+      commitment: result.commitment,
+      commitments: db.getInvestorCommitments(),
+      listings: db.getBorrowingListings(),
       message: "Simulated capital committed successfully!",
     });
   } catch (err: unknown) {

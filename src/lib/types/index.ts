@@ -436,3 +436,26 @@ export interface BorrowingListing {
   fundedAmountPaise: number;
 }
 
+export interface InvestorCommitment {
+  id: string;
+  listingId: string;
+  businessId: string;
+  businessName: string;
+  businessCategory: string;
+  city: string;
+  funderName: string;
+  investedAmountPaise: number;
+  revenueSharePercent: number;
+  repaymentCapMultiplier: number; // 1.15x
+  totalReturnCapPaise: number; // investedAmount * 1.15
+  committedAt: string;
+  monthlySalesPaise: number;
+  estimatedDailyPayoutPaise: number;
+  estimatedPaybackDays: number;
+  recoveryProbability: string;
+  riskRating: "Low Risk" | "Moderate Risk" | "Higher Yield";
+  repaidSoFarPaise: number;
+  status: "active" | "recovering" | "completed";
+}
+
+
