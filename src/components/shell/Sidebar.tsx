@@ -20,6 +20,8 @@ import {
   Sparkles,
   RotateCcw,
   Store,
+  Briefcase,
+  Shield,
 } from "lucide-react";
 import { useBusiness } from "./BusinessContext";
 import { db } from "@/lib/db";
@@ -38,7 +40,7 @@ interface NavGroup {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { activeBusiness, currentRole, setGuidedDemoActive } = useBusiness();
+  const { activeBusiness, currentUser, isOwner, isInvestor, setGuidedDemoActive } = useBusiness();
   const [collapsed, setCollapsed] = useState(false);
   const [resetting, setResetting] = useState(false);
 
@@ -53,57 +55,78 @@ export function Sidebar() {
     }
   };
 
-  const navGroups: NavGroup[] = [
-    {
-      group: "Overview",
-      items: [
-        { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      ],
-    },
-    {
-      group: "Data",
-      items: [
-        { label: "Data Centre", href: "/data-centre", icon: Database },
-        { label: "Reconciliation", href: "/reconciliation", icon: GitCompare },
-      ],
-    },
-    {
-      group: "Intelligence",
-      items: [
-        { label: "Central AI", href: "/ai-workspace", icon: Bot },
-        { label: "Doctor & Experiments", href: "/experiments", icon: Stethoscope },
-        { label: "Reviews Coach", href: "/reviews", icon: Star },
-      ],
-    },
-    {
-      group: "Grow",
-      items: [
-        { label: "Location Explorer", href: "/location", icon: MapPin },
-      ],
-    },
-    {
-      group: "Finance",
-      items: [
-        { label: "Funding (SIMULATED)", href: "/funding", icon: Coins, badge: "Sim" },
-      ],
-    },
-    {
-      group: "Public",
-      items: [
-        { label: "Public Profile", href: "/public-profile", icon: Globe },
-      ],
-    },
-    ...(currentRole === "admin"
-      ? [
-          {
-            group: "Admin",
-            items: [
-              { label: "Admin Console", href: "/admin", icon: ShieldAlert },
-            ],
-          },
-        ]
-      : []),
-  ];
+  // Role-Aware Navigation:
+  // Investors CANNOT access internal Data Centre or Reconciliation!
+  const navGroups: NavGroup[] = isInvestor
+    ? [
+        {
+          group: "Investor Discovery",
+          items: [
+            { label: "Marketplace & Deals", href: "/funding", icon: Coins, badge: "3 Deals" },
+            { label: "Business Health & Stats", href: "/dashboard", icon: LayoutDashboard },
+            { label: "AI Due Diligence", href: "/ai-workspace", icon: Bot },
+          ],
+        },
+        {
+          group: "Market Research",
+          items: [
+            { label: "Location Intelligence", href: "/location", icon: MapPin },
+            { label: "Customer Reputation", href: "/reviews", icon: Star },
+            { label: "Public Storefronts", href: "/public-profile", icon: Globe },
+          ],
+        },
+      ]
+    : [
+        {
+          group: "Overview",
+          items: [
+            { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+          ],
+        },
+        {
+          group: "Data Operations",
+          items: [
+            { label: "Data Centre", href: "/data-centre", icon: Database },
+            { label: "Reconciliation", href: "/reconciliation", icon: GitCompare },
+          ],
+        },
+        {
+          group: "Intelligence",
+          items: [
+            { label: "Central AI", href: "/ai-workspace", icon: Bot },
+            { label: "Doctor & Experiments", href: "/experiments", icon: Stethoscope },
+            { label: "Reviews Coach", href: "/reviews", icon: Star },
+          ],
+        },
+        {
+          group: "Expansion",
+          items: [
+            { label: "Location Explorer", href: "/location", icon: MapPin },
+          ],
+        },
+        {
+          group: "Capital",
+          items: [
+            { label: "Borrowing & Ledger", href: "/funding", icon: Coins, badge: "Sim" },
+          ],
+        },
+        {
+          group: "Public",
+          items: [
+            { label: "Public Profile", href: "/public-profile", icon: Globe },
+          ],
+        },
+        ...(currentUser.role === "admin"
+          ? [
+              {
+                group: "Admin",
+                items: [
+                  { label: "Admin Console", href: "/admin", icon: ShieldAlert },
+                ],
+              },
+            ]
+          : []),
+      ];
 
   return (
     <aside
@@ -114,16 +137,21 @@ export function Sidebar() {
       {/* Brand Header */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-border">
         {!collapsed && (
-          <a href="/dashboard" className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary font-bold shadow-sm shrink-0">
-              <Store className="w-4 h-4" />
+          <a
+            href={isInvestor ? "/funding" : "/dashboard"}
+            className="flex items-center gap-2.5 overflow-hidden"
+          >
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold shadow-sm shrink-0 ${
+              isInvestor ? "bg-accent" : "bg-primary"
+            }`}>
+              {isInvestor ? <Briefcase className="w-4 h-4" /> : <Store className="w-4 h-4" />}
             </div>
             <div className="truncate">
               <div className="font-bold text-sm text-text leading-tight tracking-tight">
-                Central AI OS
+                {isInvestor ? "Investor Syndicate" : "Central AI OS"}
               </div>
               <div className="text-[11px] text-text-muted truncate">
-                {activeBusiness.name}
+                {isInvestor ? "Capital Discovery Portal" : activeBusiness.name}
               </div>
             </div>
           </a>
@@ -215,17 +243,19 @@ export function Sidebar() {
           {!collapsed && <span>Reset Demo Data</span>}
         </button>
 
-        {/* Settings */}
-        <a
-          href="/settings"
-          title="Settings & Appearance"
-          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-text hover:bg-surface-2 transition-colors ${
-            pathname === "/settings" ? "bg-primary-soft text-primary-ink font-semibold" : ""
-          }`}
-        >
-          <Settings className="w-4 h-4 shrink-0 text-text-muted" />
-          {!collapsed && <span>Settings</span>}
-        </a>
+        {/* Settings (Only for Store Owners / Admins) */}
+        {!isInvestor && (
+          <a
+            href="/settings"
+            title="Settings & Appearance"
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-text hover:bg-surface-2 transition-colors ${
+              pathname === "/settings" ? "bg-primary-soft text-primary-ink font-semibold" : ""
+            }`}
+          >
+            <Settings className="w-4 h-4 shrink-0 text-text-muted" />
+            {!collapsed && <span>Settings</span>}
+          </a>
+        )}
       </div>
     </aside>
   );

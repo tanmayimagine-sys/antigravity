@@ -27,7 +27,7 @@ import {
 import { FundingOffer, LedgerEntry, BorrowingListing } from "@/lib/types";
 
 export default function FundingWorkspacePage() {
-  const { activeBusiness } = useBusiness();
+  const { activeBusiness, currentUser, isOwner, isInvestor } = useBusiness();
   const [activeTab, setActiveTab] = useState<"repayments" | "list_business" | "marketplace">("marketplace");
 
   const offers = db.getFundingOffers(activeBusiness.id);
@@ -51,7 +51,9 @@ export default function FundingWorkspacePage() {
   // Investor Commit Modal State
   const [investModalListing, setInvestModalListing] = useState<BorrowingListing | null>(null);
   const [investAmount, setInvestAmount] = useState<number>(50000);
-  const [investorName, setInvestorName] = useState<string>("Venture Catalyst Syndicate (SIMULATED)");
+  const [investorName, setInvestorName] = useState<string>(
+    currentUser.role === "funder" ? `${currentUser.name} (${currentUser.title})` : "Venture Catalyst Syndicate (SIMULATED)"
+  );
   const [isSubmittingInvest, setIsSubmittingInvest] = useState<boolean>(false);
 
   // Business stats for listing
@@ -234,7 +236,7 @@ export default function FundingWorkspacePage() {
           }`}
         >
           <PlusCircle className="w-4 h-4 text-accent" />
-          <span>List My Business for Borrowing</span>
+          <span>{isInvestor ? "List Business (Owner Required)" : "List My Business for Borrowing"}</span>
         </button>
 
         <button
@@ -247,7 +249,7 @@ export default function FundingWorkspacePage() {
           }`}
         >
           <Coins className="w-4 h-4" />
-          <span>Active Repayments & Cap Ledger</span>
+          <span>{isInvestor ? "Repayments & Cap Ledger (Market)" : "My Repayments & Cap Ledger"}</span>
         </button>
       </div>
 
@@ -393,13 +395,44 @@ export default function FundingWorkspacePage() {
 
       {/* TAB 2: LIST BUSINESS FOR BORROWING */}
       {activeTab === "list_business" && (
-        <div className="max-w-3xl mx-auto rounded-xl border border-border bg-surface p-6 sm:p-8 space-y-6 shadow-sm animate-in fade-in">
-          <div className="border-b border-border pb-4">
-            <h2 className="text-lg font-bold text-text">List Business for Capital Advance</h2>
-            <p className="text-xs text-text-muted">
-              Submit your growth capital requirement to the simulated investor syndicate. Your verified metrics will be automatically attached.
+        isInvestor ? (
+          <div className="max-w-2xl mx-auto rounded-xl border border-warning/40 bg-warning-soft/20 p-6 sm:p-8 space-y-4 shadow-sm animate-in fade-in">
+            <div className="flex items-center gap-2.5 text-warning font-bold text-base">
+              <AlertTriangle className="w-5 h-5 text-warning shrink-0" />
+              <span>Owner Privileges Required</span>
+            </div>
+            <p className="text-xs text-text leading-relaxed">
+              You are currently authenticated as <strong>{currentUser.name}</strong> with role <strong>{currentUser.badge}</strong>.
             </p>
+            <p className="text-xs text-text-muted leading-relaxed">
+              To preserve business security and prevent unauthorized financial liability simulation, <strong>only registered shop owners can list their store to borrow capital</strong>. Investors can review listed deals, assess verified Business Health Profiles, and commit simulated investment capital in the Marketplace.
+            </p>
+            <div className="pt-2 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setActiveTab("marketplace")}
+                className="px-4 py-2 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:bg-primary-hover shadow-sm"
+              >
+                Return to Investor Marketplace
+              </button>
+            </div>
           </div>
+        ) : (
+          <div className="max-w-3xl mx-auto rounded-xl border border-border bg-surface p-6 sm:p-8 space-y-6 shadow-sm animate-in fade-in">
+            <div className="border-b border-border pb-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <h2 className="text-lg font-bold text-text">List {activeBusiness.name} for Capital Advance</h2>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    Authenticated as <strong>{currentUser.name}</strong> • Permanent Tenant Lock: <span className="font-mono text-primary-ink font-semibold">{activeBusiness.id}</span>
+                  </p>
+                </div>
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-primary-soft text-primary-ink font-semibold border border-primary/20 flex items-center gap-1.5">
+                  <Lock className="w-3 h-3" />
+                  <span>Tenant Locked</span>
+                </span>
+              </div>
+            </div>
 
           {/* Auto-Attached Financial Transparency Strip */}
           <div className="p-4 rounded-xl bg-surface-2 border border-border space-y-2 text-xs">
@@ -504,6 +537,7 @@ export default function FundingWorkspacePage() {
             </div>
           </form>
         </div>
+        )
       )}
 
       {/* TAB 3: ACTIVE REPAYMENTS & CAP LEDGER */}
