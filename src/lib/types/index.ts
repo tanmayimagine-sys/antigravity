@@ -109,7 +109,7 @@ export interface SalesOrder {
   orderNumber: string;
   date: string;
   time: string;
-  channel: "counter_cash" | "upi" | "card" | "swiggy" | "zomato";
+  channel: "counter_cash" | "upi" | "card" | "swiggy" | "zomato" | "bank_transfer";
   totalPaise: number;
   taxPaise: number;
   status: "completed" | "refunded" | "cancelled";
