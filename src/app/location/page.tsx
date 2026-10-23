@@ -17,26 +17,67 @@ import {
   Layers,
   ShieldCheck,
   Check,
+  Sparkles,
+  MessageSquare,
+  Users,
+  Compass,
 } from "lucide-react";
 import { LocationCandidate } from "@/lib/types";
 
 export default function LocationExplorerPage() {
   const { activeBusiness } = useBusiness();
-  const candidates = db.getLocations(activeBusiness.id);
+  const [candidates, setCandidates] = useState<LocationCandidate[]>(
+    db.getLocations(activeBusiness.id)
+  );
   const [selectedCandidate, setSelectedCandidate] = useState<LocationCandidate>(
     candidates[0] || db.getLocations("biz_stationery")[0]
   );
   const [scenario, setScenario] = useState<ScenarioType>("base");
   const [toast, setToast] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiRationale, setAiRationale] = useState<string | null>(null);
+
+  // Review Themes & Reviews
+  const reviewThemes = db.getReviewThemes(activeBusiness.id);
 
   const handleToggleChecklist = (checkId: string) => {
     db.toggleLocationChecklistItem(activeBusiness.id, selectedCandidate.id, checkId);
-    // Refresh local candidate
     const updatedLocs = db.getLocations(activeBusiness.id);
     const updated = updatedLocs.find((l) => l.id === selectedCandidate.id);
     if (updated) setSelectedCandidate({ ...updated });
     setToast("Checklist item updated and persisted.");
     setTimeout(() => setToast(null), 2500);
+  };
+
+  const handleSuggestLocation = async (customGoal?: string) => {
+    setIsGenerating(true);
+    setToast("Central AI is analyzing Google reviews, customer pain points, and catchment demographics...");
+    try {
+      const res = await fetch("/api/locations/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessId: activeBusiness.id,
+          customGoal: customGoal || "Suggest high-demand expansion near target student/office hubs.",
+        }),
+      });
+
+      if (!res.ok) throw new Error("Location suggestion failed");
+      const data = await res.json();
+
+      if (data.candidate) {
+        setCandidates(db.getLocations(activeBusiness.id));
+        setSelectedCandidate(data.candidate);
+        setAiRationale(data.rationale);
+        setToast(`New location candidate added: ${data.candidate.areaName}!`);
+        setTimeout(() => setToast(null), 4000);
+      }
+    } catch {
+      setToast("Could not generate location. Using deterministic fallback.");
+      setTimeout(() => setToast(null), 3000);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Scenario revenue and net projection
@@ -57,18 +98,31 @@ export default function LocationExplorerPage() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-            Location Explorer
-          </h1>
-          <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-surface-2 border border-border text-text-muted">
-            Expansion Feasibility
-          </span>
+      <div className="flex items-start sm:items-center justify-between gap-4 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
+              Location Explorer
+            </h1>
+            <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-surface-2 border border-border text-text-muted">
+              Expansion Feasibility
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-text-muted mt-0.5">
+            Evaluate unit economics and candidate sites for <strong>{activeBusiness.name}</strong>
+          </p>
         </div>
-        <p className="text-xs sm:text-sm text-text-muted mt-0.5">
-          Evaluate unit economics and candidate sites for <strong>{activeBusiness.name}</strong>
-        </p>
+
+        {/* Suggest New Location with AI Button */}
+        <button
+          type="button"
+          onClick={() => handleSuggestLocation()}
+          disabled={isGenerating}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:bg-primary-hover shadow-sm disabled:opacity-50 transition-all active:scale-[0.98]"
+        >
+          <Sparkles className={`w-4 h-4 ${isGenerating ? "animate-spin" : ""}`} />
+          <span>{isGenerating ? "Analyzing Reviews & Demographics..." : "Suggest New Location with Gemini AI"}</span>
+        </button>
       </div>
 
       {toast && (
@@ -76,6 +130,64 @@ export default function LocationExplorerPage() {
           ✓ {toast}
         </div>
       )}
+
+      {/* Target Audience & Google Reviews Insights Banner */}
+      <div className="rounded-xl border border-primary/20 bg-primary-soft/30 p-4 space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 text-primary-ink font-bold text-xs uppercase tracking-wider">
+            <Users className="w-4 h-4" />
+            <span>Target Audience & Google Reviews Intelligence</span>
+          </div>
+          <span className="text-[11px] font-semibold text-accent flex items-center gap-1">
+            <MessageSquare className="w-3.5 h-3.5" />
+            Synthesized from {reviewThemes.length} customer review themes
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div className="p-3 rounded-lg bg-surface border border-border space-y-1">
+            <span className="text-text-muted block font-semibold text-[10px] uppercase">
+              Target Audience
+            </span>
+            <p className="text-text font-medium leading-snug">
+              {activeBusiness.category === "stationery"
+                ? "Engineering students, thesis researchers, campus competitive exam aspirants."
+                : activeBusiness.category === "ice_cream"
+                ? "Young adults, couples, weekend evening diners in commercial high-street clusters."
+                : "Morning commuters, tech park workers, and casual breakfast groups."}
+            </p>
+          </div>
+
+          <div className="p-3 rounded-lg bg-surface border border-border space-y-1">
+            <span className="text-text-muted block font-semibold text-[10px] uppercase">
+              Reviews Pain Point Bottleneck
+            </span>
+            <p className="text-warning font-medium leading-snug">
+              {reviewThemes.find((t) => t.sentiment === "negative")?.theme ||
+                "Peak-hour counter queue congestion during 1 PM - 2 PM."}
+            </p>
+          </div>
+
+          <div className="p-3 rounded-lg bg-surface border border-border space-y-1">
+            <span className="text-text-muted block font-semibold text-[10px] uppercase">
+              AI Location Strategy
+            </span>
+            <p className="text-accent font-medium leading-snug">
+              Open satellite express outlet within 5 km near sister college campuses to offload queue overflow.
+            </p>
+          </div>
+        </div>
+
+        {aiRationale && (
+          <div className="p-3 rounded-lg bg-accent-soft border border-accent/40 text-xs text-text space-y-1 animate-in fade-in">
+            <div className="font-bold text-accent flex items-center gap-1 text-[11px]">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>AI Recommendation Rationale:</span>
+            </div>
+            <p className="text-text-muted leading-relaxed">{aiRationale}</p>
+          </div>
+        )}
+      </div>
 
       {/* Strict Compliance Warning on Footfall */}
       <div className="p-3.5 rounded-xl bg-surface-2 border border-border flex items-start gap-3 text-xs text-text-muted">
@@ -85,7 +197,7 @@ export default function LocationExplorerPage() {
             Honest Footfall Standard
           </strong>
           <span>
-            Exact pedestrian footfall and competitor revenues cannot be measured without physical counter sensors. All candidates strictly display <strong>"Footfall: not measured"</strong> and rely solely on verified rent assumptions and student catchment indicators.
+            Exact pedestrian footfall and competitor revenues cannot be measured without physical counter sensors. All candidates strictly display <strong>"Footfall: not measured"</strong> and rely solely on verified rent assumptions and target student catchment indicators.
           </span>
         </div>
       </div>
@@ -102,7 +214,10 @@ export default function LocationExplorerPage() {
             return (
               <div
                 key={loc.id}
-                onClick={() => setSelectedCandidate(loc)}
+                onClick={() => {
+                  setSelectedCandidate(loc);
+                  setAiRationale(null);
+                }}
                 className={`p-4 rounded-xl border text-xs cursor-pointer transition-all space-y-2 ${
                   isSelected
                     ? "border-primary bg-primary-soft/30 shadow-sm"

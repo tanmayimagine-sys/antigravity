@@ -3,6 +3,7 @@ node_modules/
 dist/
 out/
 .env*.local
+.env
 *.log
 .DS_Store
 legacy_frontend/

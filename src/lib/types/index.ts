@@ -414,3 +414,25 @@ export interface CustomerReview {
   ownerResponse?: string;
   aiSuggestedResponse?: string;
 }
+
+export interface BorrowingListing {
+  id: string;
+  businessId: string;
+  businessName: string;
+  businessCategory: string;
+  city: string;
+  amountRequestedPaise: number;
+  useOfFunds: string;
+  offeredRevenueSharePercent: number; // e.g., 6.5%
+  estimatedTermMonths: number;
+  expectedMonthlyProfitPaise: number;
+  status: "open" | "funded" | "closed";
+  createdAt: string;
+  healthScore: number;
+  grossSales30dPaise: number;
+  netCashFlow30dPaise: number;
+  rating: number;
+  commitmentsCount: number;
+  fundedAmountPaise: number;
+}
+

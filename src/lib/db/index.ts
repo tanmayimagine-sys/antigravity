@@ -22,6 +22,7 @@ import {
   ReviewTheme,
   DataSource,
   AuditEvent,
+  BorrowingListing,
 } from "@/lib/types";
 
 // Clone initial seed data for runtime modifications
@@ -30,6 +31,71 @@ function cloneSeedData(): DemoDatabase {
 }
 
 let dbInstance: DemoDatabase = cloneSeedData();
+
+let initialListings: BorrowingListing[] = [
+  {
+    id: "list_stat_01",
+    businessId: "biz_stationery",
+    businessName: "Vidya Stationery & Xerox",
+    businessCategory: "Stationery & Document Centre",
+    city: "Pune",
+    amountRequestedPaise: 15000000, // ₹1,50,000
+    useOfFunds: "Purchase high-speed dual Xerox machine & pre-order bulk JK Copier paper for university semester finals",
+    offeredRevenueSharePercent: 6.5,
+    estimatedTermMonths: 6,
+    expectedMonthlyProfitPaise: 3800000, // +₹38,000 / mo
+    status: "open",
+    createdAt: "2026-10-21T10:00:00Z",
+    healthScore: 84,
+    grossSales30dPaise: 51630000, // ₹5,16,300
+    netCashFlow30dPaise: 17230000, // ₹1,72,300
+    rating: 4.8,
+    commitmentsCount: 1,
+    fundedAmountPaise: 5000000, // ₹50,000 already committed
+  },
+  {
+    id: "list_ice_01",
+    businessId: "biz_icecream",
+    businessName: "Scoops & Swirls Cold Treat",
+    businessCategory: "Artisanal Ice Cream",
+    city: "Bengaluru",
+    amountRequestedPaise: 20000000, // ₹2,00,000
+    useOfFunds: "Energy-efficient deep freezer upgrade to reduce electricity tariffs by 35% & introduce late-night sundaes",
+    offeredRevenueSharePercent: 7.5,
+    estimatedTermMonths: 7,
+    expectedMonthlyProfitPaise: 4200000,
+    status: "open",
+    createdAt: "2026-10-22T14:30:00Z",
+    healthScore: 71,
+    grossSales30dPaise: 51180000,
+    netCashFlow30dPaise: 12530000,
+    rating: 4.6,
+    commitmentsCount: 0,
+    fundedAmountPaise: 0,
+  },
+  {
+    id: "list_cafe_01",
+    businessId: "biz_cafe",
+    businessName: "Chai & Chutney All-Day Café",
+    businessCategory: "Quick-Service Café",
+    city: "New Delhi",
+    amountRequestedPaise: 25000000, // ₹2,50,000
+    useOfFunds: "Dedicated Express Morning Pickup Counter equipment & automated tea brewing station",
+    offeredRevenueSharePercent: 8.0,
+    estimatedTermMonths: 8,
+    expectedMonthlyProfitPaise: 5500000,
+    status: "open",
+    createdAt: "2026-10-20T11:00:00Z",
+    healthScore: 88,
+    grossSales30dPaise: 72030000,
+    netCashFlow30dPaise: 23200000,
+    rating: 4.9,
+    commitmentsCount: 2,
+    fundedAmountPaise: 18000000,
+  },
+];
+
+let borrowingListingsStore: BorrowingListing[] = JSON.parse(JSON.stringify(initialListings));
 let auditLogs: AuditEvent[] = [
   {
     id: "aud_01",
@@ -222,6 +288,14 @@ export const db = {
     return dbInstance.locations[businessId] || [];
   },
 
+  addLocation: (businessId: string, location: LocationCandidate): LocationCandidate => {
+    if (!dbInstance.locations[businessId]) {
+      dbInstance.locations[businessId] = [];
+    }
+    dbInstance.locations[businessId].unshift(location);
+    return location;
+  },
+
   toggleLocationChecklistItem: (businessId: string, locationId: string, checkId: string): boolean => {
     const locs = dbInstance.locations[businessId] || [];
     const loc = locs.find((l) => l.id === locationId);
@@ -260,6 +334,63 @@ export const db = {
     offer.status = "simulated_active";
     offer.acceptedAt = new Date().toISOString();
     return offer;
+  },
+
+  // Borrowing Marketplace & Investor Panel
+  getBorrowingListings: (): BorrowingListing[] => {
+    return borrowingListingsStore;
+  },
+
+  getBorrowingListingByBusinessId: (businessId: string): BorrowingListing | undefined => {
+    return borrowingListingsStore.find((l) => l.businessId === businessId);
+  },
+
+  createBorrowingListing: (listing: BorrowingListing): BorrowingListing => {
+    // Replace if exists for same business or unshift
+    const idx = borrowingListingsStore.findIndex((l) => l.businessId === listing.businessId);
+    if (idx !== -1) {
+      borrowingListingsStore[idx] = listing;
+    } else {
+      borrowingListingsStore.unshift(listing);
+    }
+    return listing;
+  },
+
+  commitInvestment: (
+    listingId: string,
+    offer: { funderName: string; amountPaise: number; revenueSharePercent: number }
+  ): { success: boolean; listing: BorrowingListing; offer: FundingOffer } | null => {
+    const listing = borrowingListingsStore.find((l) => l.id === listingId);
+    if (!listing) return null;
+
+    listing.fundedAmountPaise = (listing.fundedAmountPaise || 0) + offer.amountPaise;
+    listing.commitmentsCount = (listing.commitmentsCount || 0) + 1;
+    if (listing.fundedAmountPaise >= listing.amountRequestedPaise) {
+      listing.status = "funded";
+    }
+
+    // Create a corresponding FundingOffer
+    const newOffer: FundingOffer = {
+      id: `off_mkt_${Date.now()}`,
+      businessId: listing.businessId,
+      funderName: offer.funderName || "Verified Syndicate Investor (SIMULATED)",
+      offerAmountPaise: offer.amountPaise,
+      revenueSharePercent: offer.revenueSharePercent,
+      repaymentCapMultiplier: 1.15,
+      totalCapPaise: Math.round(offer.amountPaise * 1.15),
+      estimatedTermMonths: listing.estimatedTermMonths,
+      eligibleRevenueDefinition: "Reconciled gross sales from verified POS & UPI QR credits, minus documented refunds.",
+      feePaise: 0,
+      status: "simulated_active",
+      acceptedAt: new Date().toISOString(),
+    };
+
+    if (!dbInstance.fundingOffers[listing.businessId]) {
+      dbInstance.fundingOffers[listing.businessId] = [];
+    }
+    dbInstance.fundingOffers[listing.businessId].unshift(newOffer);
+
+    return { success: true, listing, offer: newOffer };
   },
 
   // Reviews & Themes
