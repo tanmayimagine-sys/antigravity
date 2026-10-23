@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT THEME (Default) — WCAG 2.1 AA Compliant
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  color-scheme: light;
+
+  --bg:            #F6F8FB;  /* page background */
+  --surface:       #FFFFFF;  /* cards, panels */
+  --surface-2:     #EEF2F7;  /* subtle fills, table headers, inputs */
+  --border:        #DDE3EC;
+  --text:          #0F172A;  /* main text */
+  --text-muted:    #475569;  /* secondary text */
+
+  --primary:       #1E40AF;  /* buttons, active nav (fill) */
+  --primary-hover: #1E3A8A;
+  --primary-ink:   #1E40AF;  /* primary-coloured text/icons/links */
+  --on-primary:    #FFFFFF;
+  --primary-soft:  #E8EEFC;
+
+  --accent:        #0F766E;  /* teal: growth, AI highlights */
+  --accent-soft:   #E3F4F1;
+
+  --success:       #166534;  --success-soft: #E6F4EA;
+  --warning:       #B45309;  --warning-soft: #FEF3E2;
+  --danger:        #B91C1C;  --danger-soft:  #FDECEC;
+  --info:          #0369A1;  --info-soft:    #E5F2FA;
+
+  --focus:         #2563EB;  /* focus ring */
+
+  /* chart series (colour-blind-safe order, always pair with markers/labels) */
+  --chart-1: #1E40AF;
+  --chart-2: #0F766E;
+  --chart-3: #B45309;
+  --chart-4: #7C3AED;
+  --chart-5: #BE185D;
+
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 4px 16px rgb(15 23 42 / 0.08);
+
+  /* Global motion tokens */
+  --ease-out:    cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast:    120ms;
+  --dur-base:    200ms;
+  --dur-slow:    320ms;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK THEME — WCAG 2.1 AA Compliant
+   ═══════════════════════════════════════════════════════════════ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg:            #0B1220;
+  --surface:       #111A2E;
+  --surface-2:     #17223A;
+  --border:        #26344F;
+  --text:          #E8EDF7;
+  --text-muted:    #A3B0C8;
+
+  --primary:       #2F62D8;  /* white text on this = 5.4:1 */
+  --primary-hover: #2A5BD7;
+  --primary-ink:   #8DB0FF;  /* links/icons on dark surfaces */
+  --on-primary:    #FFFFFF;
+  --primary-soft:  #16264A;
+
+  --accent:        #5EEAD4;
+  --accent-soft:   #0F2E31;
+
+  --success:       #4ADE80;  --success-soft: #12301F;
+  --warning:       #FBBF24;  --warning-soft: #35280F;
+  --danger:        #F87171;  --danger-soft:  #3A1618;
+  --info:          #38BDF8;  --info-soft:    #0F2A3B;
+
+  --focus:         #7FA6FF;
+
+  --chart-1: #6B96FF;
+  --chart-2: #5EEAD4;
+  --chart-3: #FBBF24;
+  --chart-4: #A78BFA;
+  --chart-5: #F472B6;
+
+  --shadow-sm: none;
+  --shadow-md: 0 0 0 1px var(--border);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE TYPOGRAPHY & TABULAR NUMBERS
+   ═══════════════════════════════════════════════════════════════ */
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Devanagari", sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Enable tabular figures on all numbers, tables, badges and charts */
+.tabular-nums,
+table,
+.stat-number,
+[data-tabular="true"] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus styles for keyboard accessibility */
+*:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Smooth transition applied only during theme changes to avoid slowing normal renders */
+.theme-transitioning,
+.theme-transitioning *,
+.theme-transitioning *::before,
+.theme-transitioning *::after {
+  transition: background-color 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              color 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              border-color 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              fill 250ms cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+/* Respect user's reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
