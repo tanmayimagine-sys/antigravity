@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TravelPlanner — Plan Your Perfect Journey</title>
+  <meta name="description" content="Discover destinations, build itineraries, and explore the world with TravelPlanner — your smart AI-powered travel companion." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ── Home-page specific overrides ── */
+    .popular-section   { background: var(--color-bg); }
+    .features-section  { background: #fff; }
+    .cta-section       { background: linear-gradient(135deg, var(--color-primary) 0%, #1a4fab 100%); }
+    .cta-section h2    { color: #fff; }
+    .cta-section p     { color: rgba(255,255,255,.8); }
+    .hero-visual-card  {
+      background: rgba(255,255,255,.1);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: var(--radius-xl);
+      padding: 1.75rem;
+      width: 340px;
+      box-shadow: var(--shadow-xl);
+    }
+    .hero-visual-card h4 { color: #fff; font-size: 1rem; margin-bottom: 1rem; }
+    .mini-day {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .6rem .8rem; background: rgba(255,255,255,.12);
+      border-radius: var(--radius-sm); margin-bottom: .6rem;
+    }
+    .mini-day-num { font-size: .72rem; font-weight: 700; color: var(--color-amber); width: 32px; flex-shrink:0; font-family: var(--font-head); }
+    .mini-day-info strong { display: block; color: #fff; font-size: .88rem; }
+    .mini-day-info span   { color: rgba(255,255,255,.65); font-size: .75rem; }
+    .mini-day-icon { margin-left: auto; font-size: 1.1rem; }
+    .hero-avatar-row { display: flex; align-items: center; gap: .6rem; margin-top: 1rem; }
+    .hero-avatar-row .avatars { display: flex; }
+    .hero-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.4);
+      margin-left: -8px; font-size: .68rem;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700;
+    }
+    .hero-avatar:first-child { margin-left: 0; }
+    .hero-avatar-row span { color: rgba(255,255,255,.7); font-size: .78rem; }
+    /* Gradient text */
+    .grad-text { background: linear-gradient(90deg, var(--color-accent), var(--color-amber-lt)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  </style>
+</head>
+<body>
+
+<!-- Scroll Progress -->
+<div class="progress-bar"></div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay">
+  <div class="spinner"></div>
+  <p>Planning your trip…</p>
+</div>
+
+<!-- ════════════ NAVBAR ════════════ -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">✈</div>
+      <span>Travel<em>Planner</em></span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="explore.html">Explore</a></li>
+      <li><a href="planner.html">Plan Trip</a></li>
+      <li><a href="dashboard.html">My Trips</a></li>
+    </ul>
+
+    <div class="nav-cta">
+      <a href="login.html" class="btn btn-outline btn-sm">Login</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">Sign Up</a>
+    </div>
+
+    <button class="hamburger" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Nav -->
+<div class="mobile-nav">
+  <a href="index.html">🏠 Home</a>
+  <a href="explore.html">🗺 Explore</a>
+  <a href="planner.html">📋 Plan Trip</a>
+  <a href="dashboard.html">🗂 My Trips</a>
+  <a href="itinerary.html">📅 Itinerary</a>
+  <a href="login.html" class="btn btn-outline">Login</a>
+  <a href="signup.html" class="btn btn-primary">Sign Up</a>
+</div>
+
+<!-- ════════════ HERO ════════════ -->
+<section class="hero">
+  <div class="hero-pattern"></div>
+  <div class="container" style="position:relative;z-index:2;padding-top:2rem;">
+    <div class="hero-content">
+      <div class="hero-tag">✨ Smart AI-Powered Travel Planning</div>
+      <h1>Plan Your <span class="highlight">Perfect</span><br>Journey</h1>
+      <p>Discover destinations, build day-wise itineraries and explore the world with intelligent travel planning tools.</p>
+
+      <form class="hero-search hero-search-form" role="search">
+        <span style="font-size:1.1rem;flex-shrink:0">🔍</span>
+        <input type="text" placeholder="Where do you want to go? e.g. Jaipur, Goa…" aria-label="Destination search" id="hero-dest-input" />
+        <button type="submit" class="btn btn-accent">Plan My Trip</button>
+      </form>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <strong>500+</strong>
+          <span>Destinations</span>
+        </div>
+        <div class="hero-stat">
+          <strong>50K+</strong>
+          <span>Happy Travelers</span>
+        </div>
+        <div class="hero-stat">
+          <strong>4.9★</strong>
+          <span>User Rating</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating trip card visual -->
+  <div class="hero-float">
+    <div class="hero-visual-card">
+      <h4>🗓 Your Jaipur Itinerary</h4>
+      <div class="mini-day">
+        <span class="mini-day-num">DAY 1</span>
+        <div class="mini-day-info">
+          <strong>Amber Fort</strong>
+          <span>Heritage tour · 3 hrs</span>
+        </div>
+        <span class="mini-day-icon">🏰</span>
+      </div>
+      <div class="mini-day">
+        <span class="mini-day-num">DAY 1</span>
+        <div class="mini-day-info">
+          <strong>Jal Mahal</strong>
+          <span>Sunset view · 1.5 hrs</span>
+        </div>
+        <span class="mini-day-icon">🌅</span>
+      </div>
+      <div class="mini-day">
+        <span class="mini-day-num">DAY 2</span>
+        <div class="mini-day-info">
+          <strong>Hawa Mahal</strong>
+          <span>Photography · 2 hrs</span>
+        </div>
+        <span class="mini-day-icon">📸</span>
+      </div>
+      <div class="hero-avatar-row">
+        <div class="avatars">
+          <div class="hero-avatar" style="background:#1E3A8A">A</div>
+          <div class="hero-avatar" style="background:#06B6D4">K</div>
+          <div class="hero-avatar" style="background:#F59E0B">R</div>
+        </div>
+        <span>+248 travelers visited this week</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ POPULAR DESTINATIONS ════════════ -->
+<section class="section popular-section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">Popular Destinations</div>
+      <h2>Explore India's <span class="grad-text">Most Loved</span> Places</h2>
+      <p>From majestic forts to serene beaches — discover handpicked destinations loved by thousands of travelers.</p>
+    </div>
+
+    <div class="grid-3 fade-in" id="destinations-grid">
+      <!-- Destination Cards -->
+      <div class="dest-card">
+        <img src="https://images.unsplash.com/photo-1599661046289-e31897846e41?w=600&q=80&auto=format" alt="Jaipur" loading="lazy" />
+        <div class="dest-badge">Trending 🔥</div>
+        <div class="dest-card-overlay">
+          <h3>Jaipur</h3>
+          <p>The Pink City — palaces, forts and vibrant bazaars.</p>
+          <a href="explore.html?dest=jaipur" class="btn btn-ghost btn-sm">Explore →</a>
+        </div>
+      </div>
+
+      <div class="dest-card">
+        <img src="https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&q=80&auto=format" alt="Goa" loading="lazy" />
+        <div class="dest-badge">Beach 🏖</div>
+        <div class="dest-card-overlay">
+          <h3>Goa</h3>
+          <p>Sun, sand and soulful sunsets on India's coast.</p>
+          <a href="explore.html?dest=goa" class="btn btn-ghost btn-sm">Explore →</a>
+        </div>
+      </div>
+
+      <div class="dest-card">
+        <img src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=80&auto=format" alt="Manali" loading="lazy" />
+        <div class="dest-badge">Adventure 🏔</div>
+        <div class="dest-card-overlay">
+          <h3>Manali</h3>
+          <p>Snow-capped valleys and thrilling mountain trails.</p>
+          <a href="explore.html?dest=manali" class="btn btn-ghost btn-sm">Explore →</a>
+        </div>
+      </div>
+
+      <div class="dest-card">
+        <img src="https://images.unsplash.com/photo-1548013146-72479768bada?w=600&q=80&auto=format" alt="Udaipur" loading="lazy" />
+        <div class="dest-badge">Romantic 💑</div>
+        <div class="dest-card-overlay">
+          <h3>Udaipur</h3>
+          <p>The City of Lakes — a royal and romantic escape.</p>
+          <a href="explore.html?dest=udaipur" class="btn btn-ghost btn-sm">Explore →</a>
+        </div>
+      </div>
+
+      <div class="dest-card">
+        <img src="https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&q=80&auto=format" alt="Kerala" loading="lazy" />
+        <div class="dest-badge">Nature 🌿</div>
+        <div class="dest-card-overlay">
+          <h3>Kerala</h3>
+          <p>Backwaters, spice gardens and misty hill stations.</p>
+          <a href="explore.html?dest=kerala" class="btn btn-ghost btn-sm">Explore →</a>
+        </div>
+      </div>
+
+      <div class="dest-card" style="background:linear-gradient(135deg,var(--color-primary),var(--color-accent));display:flex;align-items:center;justify-content:center;min-height:240px;cursor:pointer;" onclick="window.location.href='explore.html'">
+        <div class="dest-card-overlay" style="background:none;text-align:center;justify-content:center;align-items:center">
+          <div style="font-size:3rem;margin-bottom:.5rem">🗺</div>
+          <h3 style="color:#fff;font-size:1.25rem">View All Destinations</h3>
+          <p style="color:rgba(255,255,255,.8)">500+ places to explore</p>
+          <a href="explore.html" class="btn btn-ghost btn-sm" style="margin-top:.75rem">See All →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ FEATURES ════════════ -->
+<section class="section features-section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">Why TravelPlanner?</div>
+      <h2>Everything You Need to <span class="grad-text">Travel Smarter</span></h2>
+      <p>Powerful tools to plan, optimize and enjoy every journey you take.</p>
+    </div>
+
+    <div class="grid-3 fade-in">
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Smart Itinerary Builder</h3>
+        <p>Create detailed day-wise travel plans with drag-and-drop ease and smart suggestions.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>AI Recommended Places</h3>
+        <p>Get personalized attraction suggestions powered by intelligent algorithms.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗺</div>
+        <h3>Interactive Map Planner</h3>
+        <p>Visualize your routes and explore locations on an interactive map interface.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <h3>Budget Estimator</h3>
+        <p>Plan within your budget with real-time cost breakdowns for stays, food and travel.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Trip Optimizer</h3>
+        <p>Automatically reorder destinations for the most efficient and enjoyable travel route.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Secure Booking</h3>
+        <p>Book and manage your trip with confidence through our secure payment system.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ CTA ════════════ -->
+<section class="section cta-section" style="background:linear-gradient(135deg,#1E3A8A,#1a4fab)">
+  <div class="container text-center fade-in">
+    <div class="section-tag" style="background:rgba(6,182,212,.2);color:var(--color-accent)">Get Started Free</div>
+    <h2 style="color:#fff;margin-bottom:.75rem">Ready for Your Next Adventure?</h2>
+    <p style="color:rgba(255,255,255,.75);margin-bottom:2rem;max-width:500px;margin-inline:auto;">Join thousands of travelers planning smarter trips every day.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="planner.html" class="btn btn-accent btn-lg">Start Planning</a>
+      <a href="explore.html" class="btn btn-ghost btn-lg">Explore Destinations</a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ FOOTER ════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <span style="font-size:1.5rem">✈</span>
+          <span>Travel<em>Planner</em></span>
+        </div>
+        <p>Your intelligent travel companion for building perfect journeys, one destination at a time.</p>
+        <div class="footer-social" style="margin-top:1.25rem">
+          <a href="#" aria-label="Twitter">𝕏</a>
+          <a href="#" aria-label="Instagram">📸</a>
+          <a href="#" aria-label="Facebook">f</a>
+          <a href="#" aria-label="YouTube">▶</a>
+        </div>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="explore.html">Destinations</a></li>
+          <li><a href="planner.html">Plan a Trip</a></li>
+          <li><a href="itinerary.html">View Itinerary</a></li>
+          <li><a href="dashboard.html">My Trips</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Support</h4>
+        <ul>
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Refund Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 TravelPlanner. All rights reserved.</span>
+      <span>Made with ❤️ for travelers worldwide</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

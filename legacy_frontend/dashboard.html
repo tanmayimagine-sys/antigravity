@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Dashboard — TravelPlanner</title>
+  <meta name="description" content="View and manage all your saved, upcoming and past trips." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .dash-layout { display:grid; grid-template-columns:260px 1fr; gap:2rem; align-items:start; }
+    @media(max-width:900px) { .dash-layout { grid-template-columns:1fr; } }
+    .dash-sidebar { background:#fff; border-radius:var(--radius-xl); box-shadow:var(--shadow-md); padding:1.75rem; position:sticky; top:calc(var(--nav-h)+1rem); }
+    .user-profile { text-align:center; padding-bottom:1.5rem; border-bottom:1px solid var(--color-border); margin-bottom:1.5rem; }
+    .user-avatar  { width:72px; height:72px; background:linear-gradient(135deg,var(--color-primary),var(--color-accent)); border-radius:50%; margin:0 auto .75rem; display:flex; align-items:center; justify-content:center; font-size:1.6rem; color:#fff; font-weight:800; font-family:var(--font-head); }
+    .user-name    { font-weight:700; font-size:1rem; color:var(--color-text); }
+    .user-email   { font-size:.8rem; color:var(--color-text-muted); margin-top:.15rem; }
+    .dash-nav     { display:flex; flex-direction:column; gap:.25rem; }
+    .dash-nav a   { display:flex; align-items:center; gap:.65rem; padding:.65rem .9rem; border-radius:var(--radius-sm); font-size:.9rem; font-weight:500; color:var(--color-text-muted); transition:var(--transition); }
+    .dash-nav a:hover, .dash-nav a.active { background:rgba(30,58,138,.08); color:var(--color-primary); }
+    .dash-stat-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:2rem; }
+    @media(max-width:560px) { .dash-stat-row { grid-template-columns:1fr 1fr; } }
+    .dash-stat { background:#fff; border-radius:var(--radius-lg); padding:1.25rem 1rem; box-shadow:var(--shadow-md); text-align:center; }
+    .dash-stat strong { display:block; font-size:1.5rem; font-weight:800; font-family:var(--font-head); color:var(--color-primary); }
+    .dash-stat span   { font-size:.78rem; color:var(--color-text-muted); }
+    .section-title { font-size:1.1rem; font-weight:700; margin-bottom:1rem; display:flex; align-items:center; gap:.5rem; }
+    .trip-grid     { display:flex; flex-direction:column; gap:.85rem; }
+    .trip-status   { padding:.2rem .65rem; border-radius:var(--radius-full); font-size:.72rem; font-weight:700; }
+    .status-upcoming { background:rgba(6,182,212,.12); color:var(--color-accent-dk); }
+    .status-saved    { background:rgba(245,158,11,.12); color:#b45309; }
+    .status-past     { background:rgba(100,116,139,.12); color:#64748b; }
+  </style>
+</head>
+<body class="page-top">
+
+<div class="progress-bar"></div>
+
+<nav class="navbar">
+  <div class="container">
+    <a href="index.html" class="nav-logo"><div class="nav-logo-icon">✈</div><span>Travel<em>Planner</em></span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li><li><a href="explore.html">Explore</a></li>
+      <li><a href="planner.html">Plan Trip</a></li><li><a href="dashboard.html">My Trips</a></li>
+    </ul>
+    <div class="nav-cta">
+      <div class="nav-avatar">AK</div>
+      <a href="login.html" class="btn btn-outline btn-sm">Logout</a>
+    </div>
+    <button class="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mobile-nav">
+  <a href="index.html">🏠 Home</a><a href="explore.html">🗺 Explore</a>
+  <a href="planner.html">📋 Plan Trip</a><a href="dashboard.html">🗂 My Trips</a>
+  <a href="login.html" class="btn btn-outline">Logout</a>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="dash-layout">
+      <!-- SIDEBAR -->
+      <aside class="dash-sidebar fade-in">
+        <div class="user-profile">
+          <div class="user-avatar">AK</div>
+          <div class="user-name">Arjun Kumar</div>
+          <div class="user-email">arjun@example.com</div>
+          <div style="margin-top:.75rem"><span class="tag tag-cyan">Premium Member ✨</span></div>
+        </div>
+        <nav class="dash-nav">
+          <a href="#" class="active">🗂 Overview</a>
+          <a href="#upcoming">✈️ Upcoming Trips</a>
+          <a href="#saved">🔖 Saved Trips</a>
+          <a href="#past">📁 Past Trips</a>
+          <a href="planner.html">➕ New Trip</a>
+          <a href="#">⚙️ Settings</a>
+          <a href="login.html" style="color:var(--color-danger);margin-top:.5rem">🚪 Logout</a>
+        </nav>
+      </aside>
+
+      <!-- MAIN -->
+      <main>
+        <div class="flex-between" style="margin-bottom:1.5rem">
+          <div>
+            <h2>Welcome back, Arjun 👋</h2>
+            <p>Here's a summary of your travel activity</p>
+          </div>
+          <a href="planner.html" class="btn btn-primary">+ Plan New Trip</a>
+        </div>
+
+        <!-- Stats -->
+        <div class="dash-stat-row fade-in">
+          <div class="dash-stat"><strong>12</strong><span>Trips Planned</span></div>
+          <div class="dash-stat"><strong>3</strong><span>Upcoming</span></div>
+          <div class="dash-stat"><strong>₹2.8L</strong><span>Total Spent</span></div>
+        </div>
+
+        <!-- Upcoming -->
+        <div id="upcoming" class="fade-in" style="margin-bottom:2.5rem">
+          <div class="section-title">✈️ Upcoming Trips</div>
+          <div class="trip-grid">
+            <div class="trip-card">
+              <div class="trip-card-accent" style="background:linear-gradient(to bottom,#06B6D4,#1E3A8A)"></div>
+              <div class="trip-card-body">
+                <div class="flex-between">
+                  <h4 style="font-size:1rem">Goa Beach Getaway</h4>
+                  <span class="trip-status status-upcoming">Upcoming</span>
+                </div>
+                <div class="trip-card-meta">
+                  <span class="tag tag-cyan">📅 Apr 10 – Apr 15</span>
+                  <span class="tag tag-blue">5 Days</span>
+                  <span class="tag tag-amber">₹45,000</span>
+                </div>
+                <div style="display:flex;gap:.6rem;margin-top:1rem">
+                  <a href="itinerary.html" class="btn btn-primary btn-sm">View Itinerary</a>
+                  <a href="payment.html" class="btn btn-outline btn-sm">Manage Booking</a>
+                </div>
+              </div>
+            </div>
+            <div class="trip-card">
+              <div class="trip-card-accent" style="background:linear-gradient(to bottom,#F59E0B,#ef4444)"></div>
+              <div class="trip-card-body">
+                <div class="flex-between">
+                  <h4 style="font-size:1rem">Manali Snow Trek</h4>
+                  <span class="trip-status status-upcoming">Upcoming</span>
+                </div>
+                <div class="trip-card-meta">
+                  <span class="tag tag-cyan">📅 May 5 – May 12</span>
+                  <span class="tag tag-blue">7 Days</span>
+                  <span class="tag tag-amber">₹60,000</span>
+                </div>
+                <div style="display:flex;gap:.6rem;margin-top:1rem">
+                  <a href="itinerary.html" class="btn btn-primary btn-sm">View Itinerary</a>
+                  <a href="payment.html" class="btn btn-outline btn-sm">Manage Booking</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Saved -->
+        <div id="saved" class="fade-in" style="margin-bottom:2.5rem">
+          <div class="section-title">🔖 Saved Trips</div>
+          <div class="trip-grid">
+            <div class="trip-card">
+              <div class="trip-card-accent" style="background:linear-gradient(to bottom,#8b5cf6,#06B6D4)"></div>
+              <div class="trip-card-body">
+                <div class="flex-between">
+                  <h4 style="font-size:1rem">Kerala Backwaters</h4>
+                  <span class="trip-status status-saved">Saved</span>
+                </div>
+                <div class="trip-card-meta">
+                  <span class="tag tag-cyan">📅 Not scheduled</span>
+                  <span class="tag tag-blue">6 Days</span>
+                  <span class="tag tag-amber">₹55,000</span>
+                </div>
+                <div style="display:flex;gap:.6rem;margin-top:1rem">
+                  <a href="itinerary.html" class="btn btn-primary btn-sm">View Itinerary</a>
+                  <a href="planner.html" class="btn btn-outline btn-sm">Edit Plan</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Past -->
+        <div id="past" class="fade-in">
+          <div class="section-title">📁 Past Trips</div>
+          <div class="trip-grid">
+            <div class="trip-card">
+              <div class="trip-card-accent" style="background:linear-gradient(to bottom,#94a3b8,#64748b)"></div>
+              <div class="trip-card-body">
+                <div class="flex-between">
+                  <h4 style="font-size:1rem">Jaipur Heritage Tour</h4>
+                  <span class="trip-status status-past">Completed ✓</span>
+                </div>
+                <div class="trip-card-meta">
+                  <span class="tag tag-cyan">📅 Jan 5 – Jan 8</span>
+                  <span class="tag tag-blue">3 Days</span>
+                  <span class="tag tag-amber">₹28,000</span>
+                </div>
+                <div style="display:flex;gap:.6rem;margin-top:1rem">
+                  <a href="itinerary.html" class="btn btn-primary btn-sm">View Itinerary</a>
+                  <button class="btn btn-outline btn-sm" onclick="alert('Review feature coming soon!')">⭐ Write Review</button>
+                </div>
+              </div>
+            </div>
+            <div class="trip-card">
+              <div class="trip-card-accent" style="background:linear-gradient(to bottom,#94a3b8,#64748b)"></div>
+              <div class="trip-card-body">
+                <div class="flex-between">
+                  <h4 style="font-size:1rem">Udaipur Two-Day Escape</h4>
+                  <span class="trip-status status-past">Completed ✓</span>
+                </div>
+                <div class="trip-card-meta">
+                  <span class="tag tag-cyan">📅 Dec 20 – Dec 22</span>
+                  <span class="tag tag-blue">2 Days</span>
+                  <span class="tag tag-amber">₹22,000</span>
+                </div>
+                <div style="display:flex;gap:.6rem;margin-top:1rem">
+                  <a href="itinerary.html" class="btn btn-primary btn-sm">View Itinerary</a>
+                  <button class="btn btn-outline btn-sm" onclick="alert('Review feature coming soon!')">⭐ Write Review</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><div class="footer-logo"><span style="font-size:1.5rem">✈</span><span>Travel<em>Planner</em></span></div><p>Your travel companion.</p></div>
+      <div><h4>Pages</h4><ul><li><a href="index.html">Home</a></li><li><a href="explore.html">Explore</a></li><li><a href="planner.html">Plan</a></li></ul></div>
+      <div><h4>Company</h4><ul><li><a href="#">About</a></li><li><a href="#">Blog</a></li></ul></div>
+      <div><h4>Support</h4><ul><li><a href="#">Help</a></li><li><a href="#">Privacy</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>© 2026 TravelPlanner</span><span>Made with ❤️</span></div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

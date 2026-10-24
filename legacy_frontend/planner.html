@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plan Your Trip — TravelPlanner</title>
+  <meta name="description" content="Enter your trip details and generate a personalized day-wise itinerary in seconds." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .planner-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+    @media(max-width:900px) { .planner-layout { grid-template-columns: 1fr; } }
+    .planner-card  { background:#fff; border-radius:var(--radius-xl); box-shadow:var(--shadow-lg); padding:2.5rem; }
+    .planner-side  { display:flex; flex-direction:column; gap:1.5rem; }
+    .info-card     { background:linear-gradient(135deg,var(--color-primary),#1a4fab); border-radius:var(--radius-lg); padding:1.75rem; color:#fff; }
+    .info-card h3  { color:#fff; margin-bottom:.5rem; font-size:1.05rem; }
+    .info-card p   { color:rgba(255,255,255,.8); font-size:.87rem; }
+    .info-card ul  { margin-top:.75rem; display:flex; flex-direction:column; gap:.4rem; }
+    .info-card ul li { font-size:.85rem; display:flex; align-items:center; gap:.5rem; color:rgba(255,255,255,.85); }
+    .type-pills { display:flex; gap:.6rem; flex-wrap:wrap; }
+    .type-pill  { padding:.5rem 1.1rem; border:2px solid var(--color-border); border-radius:var(--radius-full);
+                  font-size:.87rem; font-weight:600; cursor:pointer; transition:var(--transition); background:#fff; color:var(--color-text-muted); }
+    .type-pill.selected { border-color:var(--color-primary); background:var(--color-primary); color:#fff; }
+    .type-pill:hover:not(.selected) { border-color:var(--color-accent); color:var(--color-accent); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    @media(max-width:560px) { .form-row { grid-template-columns:1fr; } }
+    .range-display { display:flex; justify-content:space-between; font-size:.82rem; color:var(--color-text-muted); margin-top:.2rem; }
+    .step-dots { display:flex; gap:.4rem; margin-bottom:1.5rem; }
+    .step-dot  { width:8px; height:8px; border-radius:50%; background:var(--color-border); transition:var(--transition); }
+    .step-dot.active { background:var(--color-primary); width:24px; border-radius:4px; }
+    .form-divider { border:none; border-top:1px solid var(--color-border); margin:1.5rem 0; }
+  </style>
+</head>
+<body class="page-top">
+
+<div class="progress-bar"></div>
+<div class="loading-overlay"><div class="spinner"></div><p>Generating your itinerary…</p></div>
+
+<nav class="navbar">
+  <div class="container">
+    <a href="index.html" class="nav-logo"><div class="nav-logo-icon">✈</div><span>Travel<em>Planner</em></span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li><li><a href="explore.html">Explore</a></li>
+      <li><a href="planner.html">Plan Trip</a></li><li><a href="dashboard.html">My Trips</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="login.html" class="btn btn-outline btn-sm">Login</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">Sign Up</a>
+    </div>
+    <button class="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mobile-nav">
+  <a href="index.html">🏠 Home</a><a href="explore.html">🗺 Explore</a>
+  <a href="planner.html">📋 Plan Trip</a><a href="dashboard.html">🗂 My Trips</a>
+  <a href="login.html" class="btn btn-outline">Login</a><a href="signup.html" class="btn btn-primary">Sign Up</a>
+</div>
+
+<div class="page-hero">
+  <div class="container page-hero-content">
+    <div class="breadcrumb"><a href="index.html">Home</a><span class="breadcrumb-sep">/</span><span>Plan Trip</span></div>
+    <h1>Plan Your Trip</h1>
+    <p>Fill in the details below and we'll generate your perfect itinerary</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="planner-layout">
+      <!-- FORM CARD -->
+      <div class="planner-card fade-in">
+        <div class="step-dots">
+          <div class="step-dot active"></div>
+          <div class="step-dot active"></div>
+          <div class="step-dot"></div>
+        </div>
+        <h2 style="margin-bottom:.35rem">Trip Details</h2>
+        <p style="margin-bottom:2rem">Tell us about your trip and we'll do the rest.</p>
+
+        <form id="planner-form" novalidate>
+          <!-- Destination -->
+          <div class="form-group" style="margin-bottom:1.25rem" id="fg-destination">
+            <label class="form-label" for="destination">🗺 Destination</label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">📍</span>
+              <input class="form-control" type="text" id="destination" name="destination"
+                placeholder="e.g. Jaipur, Goa, Manali…" autocomplete="off" required />
+            </div>
+            <span class="form-hint">Enter city, region or country</span>
+            <span class="form-error" id="err-dest">Please enter a destination</span>
+          </div>
+
+          <!-- Dates -->
+          <div class="form-row" style="margin-bottom:1.25rem">
+            <div class="form-group" id="fg-start">
+              <label class="form-label" for="start-date">📅 Start Date</label>
+              <input class="form-control" type="date" id="start-date" name="start_date" required />
+              <span class="form-error" id="err-start">Select a start date</span>
+            </div>
+            <div class="form-group" id="fg-end">
+              <label class="form-label" for="end-date">📅 End Date</label>
+              <input class="form-control" type="date" id="end-date" name="end_date" required />
+              <span class="form-error" id="err-end">Select an end date</span>
+            </div>
+          </div>
+
+          <hr class="form-divider" />
+
+          <!-- Budget -->
+          <div class="form-group" style="margin-bottom:1.25rem">
+            <label class="form-label" for="budget">💰 Budget (₹)</label>
+            <input class="form-control" type="range" id="budget" name="budget"
+              min="5000" max="200000" step="1000" value="30000"
+              oninput="document.getElementById('budget-val').textContent='₹'+Number(this.value).toLocaleString('en-IN')" />
+            <div class="range-display">
+              <span>₹5,000</span>
+              <strong id="budget-val" style="color:var(--color-primary)">₹30,000</strong>
+              <span>₹2,00,000</span>
+            </div>
+            <span class="form-hint">Drag to set your total trip budget</span>
+          </div>
+
+          <!-- Travel Type -->
+          <div class="form-group" style="margin-bottom:2rem">
+            <label class="form-label">👥 Travel Type</label>
+            <div class="type-pills" id="type-pills">
+              <button type="button" class="type-pill selected" data-type="solo">🧍 Solo</button>
+              <button type="button" class="type-pill" data-type="friends">👯 Friends</button>
+              <button type="button" class="type-pill" data-type="family">👨‍👩‍👧 Family</button>
+              <button type="button" class="type-pill" data-type="couple">💑 Couple</button>
+            </div>
+            <input type="hidden" id="travel-type" value="solo" />
+            <span class="form-hint">Helps us tailor recommendations for you</span>
+          </div>
+
+          <!-- Interests (optional) -->
+          <div class="form-group" style="margin-bottom:2rem">
+            <label class="form-label">🎯 Interests (optional)</label>
+            <div class="type-pills" id="interest-pills">
+              <button type="button" class="type-pill" data-int="Heritage">🏛 Heritage</button>
+              <button type="button" class="type-pill" data-int="Food">🍜 Food</button>
+              <button type="button" class="type-pill" data-int="Adventure">🧗 Adventure</button>
+              <button type="button" class="type-pill" data-int="Shopping">🛍 Shopping</button>
+              <button type="button" class="type-pill" data-int="Nature">🌿 Nature</button>
+              <button type="button" class="type-pill" data-int="Nightlife">🎶 Nightlife</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg" style="width:100%">
+            ✨ Generate Itinerary
+          </button>
+        </form>
+      </div>
+
+      <!-- SIDE INFO -->
+      <div class="planner-side fade-in">
+        <div class="info-card">
+          <h3>✈️ How It Works</h3>
+          <p>Our smart planner builds your trip in 3 simple steps:</p>
+          <ul>
+            <li>📍 Enter your destination and dates</li>
+            <li>💰 Set your budget and travel style</li>
+            <li>🗓 Get a day-wise AI-powered itinerary</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <h4 style="margin-bottom:1rem">🔥 Popular Right Now</h4>
+            <div style="display:flex;flex-direction:column;gap:.75rem" id="trending-list">
+              <!-- filled by JS -->
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <h4 style="margin-bottom:.5rem">⏱ Average Trip Stats</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem">
+              <div style="text-align:center;padding:.75rem;background:var(--color-bg);border-radius:var(--radius-md)">
+                <div style="font-size:1.4rem;font-weight:800;color:var(--color-primary);font-family:var(--font-head)">4.2</div>
+                <div style="font-size:.78rem;color:var(--color-text-muted)">Avg. Days</div>
+              </div>
+              <div style="text-align:center;padding:.75rem;background:var(--color-bg);border-radius:var(--radius-md)">
+                <div style="font-size:1.4rem;font-weight:800;color:var(--color-accent);font-family:var(--font-head)">₹28K</div>
+                <div style="font-size:.78rem;color:var(--color-text-muted)">Avg. Budget</div>
+              </div>
+              <div style="text-align:center;padding:.75rem;background:var(--color-bg);border-radius:var(--radius-md)">
+                <div style="font-size:1.4rem;font-weight:800;color:var(--color-amber);font-family:var(--font-head)">6.5</div>
+                <div style="font-size:.78rem;color:var(--color-text-muted)">Avg. Places</div>
+              </div>
+              <div style="text-align:center;padding:.75rem;background:var(--color-bg);border-radius:var(--radius-md)">
+                <div style="font-size:1.4rem;font-weight:800;color:var(--color-success);font-family:var(--font-head)">4.9★</div>
+                <div style="font-size:.78rem;color:var(--color-text-muted)">Satisfaction</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo"><span style="font-size:1.5rem">✈</span><span>Travel<em>Planner</em></span></div>
+        <p>Your intelligent travel companion.</p>
+      </div>
+      <div><h4>Pages</h4><ul><li><a href="index.html">Home</a></li><li><a href="explore.html">Explore</a></li><li><a href="itinerary.html">Itinerary</a></li></ul></div>
+      <div><h4>Company</h4><ul><li><a href="#">About</a></li><li><a href="#">Blog</a></li></ul></div>
+      <div><h4>Support</h4><ul><li><a href="#">Help</a></li><li><a href="#">Privacy</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>© 2026 TravelPlanner</span><span>Made with ❤️</span></div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script src="js/planner.js"></script>
+</body>
+</html>

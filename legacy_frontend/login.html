@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — TravelPlanner</title>
+  <meta name="description" content="Login to your TravelPlanner account to view your trips and itineraries." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body { min-height:100vh; background:linear-gradient(135deg,var(--color-primary) 0%,#1a4fab 50%,#0e3266 100%); display:flex; flex-direction:column; }
+    .auth-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:2rem 1rem; }
+    .auth-card  { background:#fff; border-radius:var(--radius-xl); box-shadow:var(--shadow-xl); padding:2.75rem 2.5rem; width:100%; max-width:460px; }
+    .auth-logo  { text-align:center; margin-bottom:2rem; }
+    .auth-logo .logo-icon { width:56px; height:56px; background:linear-gradient(135deg,var(--color-primary),var(--color-accent)); border-radius:var(--radius-md); display:inline-flex; align-items:center; justify-content:center; font-size:1.5rem; color:#fff; margin-bottom:.75rem; }
+    .auth-logo h2 { color:var(--color-primary); margin-bottom:.25rem; }
+    .auth-logo p  { font-size:.87rem; }
+    .divider { display:flex; align-items:center; gap:1rem; margin:1.5rem 0; }
+    .divider::before, .divider::after { content:''; flex:1; height:1px; background:var(--color-border); }
+    .divider span { font-size:.8rem; color:var(--color-text-muted); white-space:nowrap; }
+    .social-btn { display:flex; align-items:center; justify-content:center; gap:.6rem; width:100%; padding:.7rem; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); font-size:.9rem; font-weight:600; transition:var(--transition); cursor:pointer; background:#fff; }
+    .social-btn:hover { border-color:var(--color-accent); background:rgba(6,182,212,.04); }
+    .auth-footer { text-align:center; margin-top:1.5rem; font-size:.87rem; color:var(--color-text-muted); }
+    .auth-footer a { color:var(--color-primary); font-weight:600; }
+    .auth-footer a:hover { text-decoration:underline; }
+    .password-wrap { position:relative; }
+    .password-wrap .form-control { padding-right:3rem; }
+    .toggle-pw { position:absolute; right:.85rem; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--color-text-muted); }
+  </style>
+</head>
+<body>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-icon">✈</div>
+      <h2>Welcome Back</h2>
+      <p>Login to continue planning your perfect journey</p>
+    </div>
+
+    <!-- Social login -->
+    <div style="display:flex;gap:.75rem;margin-bottom:1rem">
+      <button class="social-btn" onclick="socialLogin('Google')">🌐 Google</button>
+      <button class="social-btn" onclick="socialLogin('Facebook')">📘 Facebook</button>
+    </div>
+
+    <div class="divider"><span>or continue with email</span></div>
+
+    <form id="login-form" novalidate>
+      <div class="form-group" style="margin-bottom:1.15rem" id="fg-email">
+        <label class="form-label" for="email">Email Address</label>
+        <div class="input-icon-wrap">
+          <span class="input-icon">📧</span>
+          <input class="form-control" type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required />
+        </div>
+        <span class="form-error" id="err-email">Please enter a valid email</span>
+      </div>
+
+      <div class="form-group" style="margin-bottom:1.75rem" id="fg-password">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <label class="form-label" for="password">Password</label>
+          <a href="#" style="font-size:.8rem;color:var(--color-accent)">Forgot password?</a>
+        </div>
+        <div class="password-wrap">
+          <input class="form-control" type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+          <button type="button" class="toggle-pw" onclick="togglePw('password',this)">👁</button>
+        </div>
+        <span class="form-error" id="err-password">Password must be at least 6 characters</span>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width:100%" id="login-btn">Login →</button>
+    </form>
+
+    <div class="auth-footer">
+      Don't have an account? <a href="signup.html">Sign up free</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script>
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+}
+function socialLogin(provider) {
+  alert(`${provider} OAuth will be connected here.\n[API-READY] — configure OAuth redirect.`);
+}
+</script>
+</body>
+</html>

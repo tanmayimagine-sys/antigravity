@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Explore Destinations — TravelPlanner</title>
+  <meta name="description" content="Browse 500+ travel destinations. Filter by mountains, beaches, cities and adventures." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .explore-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px,1fr)); gap: 1.5rem; }
+    .exp-card { background:#fff; border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-md); transition:var(--transition); }
+    .exp-card:hover { transform:translateY(-5px); box-shadow:var(--shadow-lg); }
+    .exp-card img { width:100%; height:200px; object-fit:cover; transition:transform .4s; }
+    .exp-card:hover img { transform:scale(1.05); }
+    .exp-card-body { padding:1.25rem; }
+    .exp-card-body h3 { font-size:1.05rem; margin-bottom:.3rem; }
+    .exp-card-body p  { font-size:.83rem; margin-bottom:1rem; }
+    .exp-card-footer  { display:flex; align-items:center; justify-content:space-between; }
+    .exp-rating { font-size:.8rem; color:#F59E0B; font-weight:600; }
+    .search-bar { display:flex; gap:.75rem; margin-bottom:2rem; }
+    .search-bar .form-control { max-width:380px; }
+    .no-results { text-align:center; padding:3rem; color:var(--color-text-muted); }
+  </style>
+</head>
+<body class="page-top">
+
+<div class="progress-bar"></div>
+
+<nav class="navbar">
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">✈</div>
+      <span>Travel<em>Planner</em></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="explore.html">Explore</a></li>
+      <li><a href="planner.html">Plan Trip</a></li>
+      <li><a href="dashboard.html">My Trips</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="login.html" class="btn btn-outline btn-sm">Login</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">Sign Up</a>
+    </div>
+    <button class="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mobile-nav">
+  <a href="index.html">🏠 Home</a><a href="explore.html">🗺 Explore</a>
+  <a href="planner.html">📋 Plan Trip</a><a href="dashboard.html">🗂 My Trips</a>
+  <a href="login.html" class="btn btn-outline">Login</a>
+  <a href="signup.html" class="btn btn-primary">Sign Up</a>
+</div>
+
+<!-- Page Hero -->
+<div class="page-hero">
+  <div class="container page-hero-content">
+    <div class="breadcrumb"><a href="index.html">Home</a><span class="breadcrumb-sep">/</span><span>Explore</span></div>
+    <h1>Explore Destinations</h1>
+    <p>Discover handpicked places across India and the world</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+
+    <!-- Search + Filter -->
+    <div class="search-bar fade-in">
+      <div class="input-icon-wrap" style="flex:1;max-width:380px">
+        <span class="input-icon">🔍</span>
+        <input type="text" class="form-control" id="dest-search" placeholder="Search destinations…" oninput="filterDestinations()" />
+      </div>
+    </div>
+
+    <div class="filter-bar fade-in" id="filter-bar">
+      <button class="filter-pill active" data-filter="all" onclick="filterDestinations(this)">🔀 All</button>
+      <button class="filter-pill" data-filter="mountain" onclick="filterDestinations(this)">⛰ Mountain</button>
+      <button class="filter-pill" data-filter="beach" onclick="filterDestinations(this)">🏖 Beach</button>
+      <button class="filter-pill" data-filter="city" onclick="filterDestinations(this)">🏙 City</button>
+      <button class="filter-pill" data-filter="adventure" onclick="filterDestinations(this)">🧗 Adventure</button>
+      <button class="filter-pill" data-filter="nature" onclick="filterDestinations(this)">🌿 Nature</button>
+      <button class="filter-pill" data-filter="heritage" onclick="filterDestinations(this)">🏛 Heritage</button>
+    </div>
+
+    <div class="explore-grid fade-in" id="explore-grid">
+      <!-- Cards are rendered by JS -->
+    </div>
+    <p class="no-results" id="no-results" style="display:none">No destinations match your search. Try a different filter.</p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo"><span style="font-size:1.5rem">✈</span><span>Travel<em>Planner</em></span></div>
+        <p>Your intelligent travel companion for building perfect journeys.</p>
+      </div>
+      <div><h4>Explore</h4><ul><li><a href="explore.html">Destinations</a></li><li><a href="planner.html">Plan a Trip</a></li><li><a href="dashboard.html">My Trips</a></li></ul></div>
+      <div><h4>Company</h4><ul><li><a href="#">About</a></li><li><a href="#">Blog</a></li><li><a href="#">Contact</a></li></ul></div>
+      <div><h4>Support</h4><ul><li><a href="#">Help</a></li><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>© 2026 TravelPlanner</span><span>Made with ❤️</span></div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+// [API-READY] — replace DESTINATIONS array with API call: GET /api/destinations
+const DESTINATIONS = [
+  { id:1,  name:'Jaipur',       desc:'The Pink City — forts, palaces, and vibrant bazaars.', img:'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=600&q=80&auto=format', tags:['city','heritage'], rating:'4.8', reviews:2420 },
+  { id:2,  name:'Goa',          desc:'Sun, sand, and soulful sunsets on India\'s golden shores.', img:'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&q=80&auto=format', tags:['beach','adventure'], rating:'4.7', reviews:3180 },
+  { id:3,  name:'Manali',       desc:'Snow-capped Himalayan valleys with thrilling trails.', img:'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=80&auto=format', tags:['mountain','adventure'], rating:'4.9', reviews:1870 },
+  { id:4,  name:'Udaipur',      desc:'The City of Lakes — romantic palaces and serene waters.', img:'https://images.unsplash.com/photo-1548013146-72479768bada?w=600&q=80&auto=format', tags:['city','heritage'], rating:'4.8', reviews:2100 },
+  { id:5,  name:'Kerala',       desc:'Backwaters, spice gardens and misty hill stations.', img:'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&q=80&auto=format', tags:['nature','beach'], rating:'4.9', reviews:2750 },
+  { id:6,  name:'Leh-Ladakh',   desc:'High-altitude desert beauty with Buddhist monasteries.', img:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80&auto=format', tags:['mountain','adventure'], rating:'4.9', reviews:1340 },
+  { id:7,  name:'Agra',         desc:'Home to the iconic Taj Mahal — a wonder of the world.', img:'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=600&q=80&auto=format', tags:['heritage','city'], rating:'4.6', reviews:3900 },
+  { id:8,  name:'Rishikesh',    desc:'Yoga capital and adventure hub on the Ganges river.', img:'https://images.unsplash.com/photo-1600100397608-cd0b8cadd5cb?w=600&q=80&auto=format', tags:['adventure','nature'], rating:'4.7', reviews:1560 },
+  { id:9,  name:'Andaman',      desc:'Crystal-clear waters and pristine coral reefs.', img:'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=600&q=80&auto=format', tags:['beach','adventure'], rating:'4.9', reviews:980 },
+  { id:10, name:'Varanasi',     desc:'Ancient spiritual city on the sacred Ganges banks.', img:'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?w=600&q=80&auto=format', tags:['heritage','city'], rating:'4.7', reviews:2200 },
+  { id:11, name:'Coorg',        desc:'The Scotland of India — misty coffee plantations.', img:'https://images.unsplash.com/photo-1609153886020-f49fab8fef9a?w=600&q=80&auto=format', tags:['nature','mountain'], rating:'4.8', reviews:1120 },
+  { id:12, name:'Darjeeling',   desc:'Tea gardens, toy trains and views of Kangchenjunga.', img:'https://images.unsplash.com/photo-1544735716-ea9ef790fd05?w=600&q=80&auto=format', tags:['mountain','nature'], rating:'4.7', reviews:890 },
+];
+
+let activeFilter = 'all';
+
+function renderCards(list) {
+  const grid = document.getElementById('explore-grid');
+  const noRes = document.getElementById('no-results');
+  if (!list.length) { grid.innerHTML = ''; noRes.style.display = 'block'; return; }
+  noRes.style.display = 'none';
+  grid.innerHTML = list.map(d => `
+    <article class="exp-card" data-tags="${d.tags.join(',')}">
+      <img src="${d.img}" alt="${d.name}" loading="lazy" />
+      <div class="exp-card-body">
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem">
+          ${d.tags.map(t=>`<span class="tag tag-blue">${t}</span>`).join('')}
+        </div>
+        <h3>${d.name}</h3>
+        <p>${d.desc}</p>
+        <div class="exp-card-footer">
+          <span class="exp-rating">★ ${d.rating} <span style="color:#94a3b8;font-weight:400">(${d.reviews.toLocaleString()})</span></span>
+          <a href="planner.html?destination=${encodeURIComponent(d.name)}" class="btn btn-primary btn-sm">Plan Trip</a>
+        </div>
+      </div>
+    </article>
+  `).join('');
+}
+
+function filterDestinations(pillEl) {
+  if (pillEl) {
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    pillEl.classList.add('active');
+    activeFilter = pillEl.dataset.filter;
+  }
+  const query = document.getElementById('dest-search').value.toLowerCase();
+  const filtered = DESTINATIONS.filter(d => {
+    const matchFilter = activeFilter === 'all' || d.tags.includes(activeFilter);
+    const matchSearch = d.name.toLowerCase().includes(query) || d.desc.toLowerCase().includes(query);
+    return matchFilter && matchSearch;
+  });
+  renderCards(filtered);
+}
+
+// Initial render
+renderCards(DESTINATIONS);
+</script>
+</body>
+</html>

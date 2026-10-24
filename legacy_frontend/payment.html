@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout & Payment — TravelPlanner</title>
+  <meta name="description" content="Secure checkout for your travel booking. Powered by Razorpay." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .payment-layout { display:grid; grid-template-columns:1fr 420px; gap:2rem; align-items:start; }
+    @media(max-width:900px) { .payment-layout { grid-template-columns:1fr; } }
+    .pay-card { background:#fff; border-radius:var(--radius-xl); box-shadow:var(--shadow-lg); padding:2.25rem; }
+    .pay-card h3 { margin-bottom:1.5rem; }
+    .method-list { display:flex; flex-direction:column; gap:.75rem; margin-bottom:1.5rem; }
+    .method-item { display:flex; align-items:center; gap:1rem; padding:1rem; border:2px solid var(--color-border); border-radius:var(--radius-md); cursor:pointer; transition:var(--transition); }
+    .method-item:hover       { border-color:var(--color-accent); background:rgba(6,182,212,.04); }
+    .method-item.selected    { border-color:var(--color-primary); background:rgba(30,58,138,.06); }
+    .method-icon { width:48px; height:32px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; }
+    .method-info strong { display:block; font-size:.92rem; }
+    .method-info span   { font-size:.78rem; color:var(--color-text-muted); }
+    .method-radio { margin-left:auto; width:18px; height:18px; accent-color:var(--color-primary); }
+    .summary-row  { display:flex; justify-content:space-between; padding:.6rem 0; border-bottom:1px solid var(--color-border); font-size:.9rem; }
+    .summary-row:last-of-type { border:none; }
+    .summary-row strong { color:var(--color-text); }
+    .trust-badges { display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; margin-top:1.25rem; }
+    .trust-badge  { display:flex; align-items:center; gap:.4rem; font-size:.76rem; color:var(--color-text-muted); }
+    .promo-wrap { display:flex; gap:.5rem; }
+    .promo-wrap .form-control { flex:1; }
+  </style>
+</head>
+<body class="page-top">
+
+<div class="progress-bar"></div>
+
+<nav class="navbar">
+  <div class="container">
+    <a href="index.html" class="nav-logo"><div class="nav-logo-icon">✈</div><span>Travel<em>Planner</em></span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li><li><a href="explore.html">Explore</a></li>
+      <li><a href="planner.html">Plan Trip</a></li><li><a href="dashboard.html">My Trips</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="login.html" class="btn btn-outline btn-sm">Login</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">Sign Up</a>
+    </div>
+    <button class="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mobile-nav">
+  <a href="index.html">🏠 Home</a><a href="explore.html">🗺 Explore</a>
+  <a href="planner.html">📋 Plan Trip</a><a href="dashboard.html">🗂 My Trips</a>
+  <a href="login.html" class="btn btn-outline">Login</a><a href="signup.html" class="btn btn-primary">Sign Up</a>
+</div>
+
+<div class="page-hero">
+  <div class="container page-hero-content">
+    <div class="breadcrumb"><a href="index.html">Home</a><span class="breadcrumb-sep">/</span><a href="itinerary.html">Itinerary</a><span class="breadcrumb-sep">/</span><span>Payment</span></div>
+    <h1>Secure Checkout</h1>
+    <p>Complete your trip booking securely</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="payment-layout">
+      <!-- PAYMENT OPTIONS -->
+      <div>
+        <div class="pay-card fade-in">
+          <h3>💳 Payment Method</h3>
+          <div class="method-list">
+            <div class="method-item selected" onclick="selectMethod(this)">
+              <div class="method-icon">💳</div>
+              <div class="method-info"><strong>Credit / Debit Card</strong><span>Visa, Mastercard, RuPay</span></div>
+              <input type="radio" class="method-radio" name="pay" value="card" checked />
+            </div>
+            <div class="method-item" onclick="selectMethod(this)">
+              <div class="method-icon">📱</div>
+              <div class="method-info"><strong>UPI</strong><span>GPay, PhonePe, Paytm</span></div>
+              <input type="radio" class="method-radio" name="pay" value="upi" />
+            </div>
+            <div class="method-item" onclick="selectMethod(this)">
+              <div class="method-icon">🏦</div>
+              <div class="method-info"><strong>Net Banking</strong><span>All major banks</span></div>
+              <input type="radio" class="method-radio" name="pay" value="netbanking" />
+            </div>
+            <div class="method-item" onclick="selectMethod(this)">
+              <div class="method-icon">💰</div>
+              <div class="method-info"><strong>EMI</strong><span>No-cost EMI available</span></div>
+              <input type="radio" class="method-radio" name="pay" value="emi" />
+            </div>
+          </div>
+
+          <!-- Card fields -->
+          <div id="card-fields">
+            <div class="form-group" style="margin-bottom:1rem">
+              <label class="form-label" for="card-num">Card Number</label>
+              <div class="input-icon-wrap">
+                <span class="input-icon">💳</span>
+                <input class="form-control" type="text" id="card-num" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)" />
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+              <div class="form-group">
+                <label class="form-label" for="card-exp">Expiry</label>
+                <input class="form-control" type="text" id="card-exp" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="card-cvv">CVV</label>
+                <input class="form-control" type="password" id="card-cvv" placeholder="●●●" maxlength="4" />
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:1.5rem">
+              <label class="form-label" for="card-name">Name on Card</label>
+              <input class="form-control" type="text" id="card-name" placeholder="Arjun Kumar" />
+            </div>
+          </div>
+
+          <!-- Promo -->
+          <div class="form-group" style="margin-bottom:1.75rem">
+            <label class="form-label">Promo Code</label>
+            <div class="promo-wrap">
+              <input class="form-control" type="text" id="promo-code" placeholder="e.g. TRAVEL20" />
+              <button class="btn btn-outline" onclick="applyPromo()">Apply</button>
+            </div>
+            <span class="form-hint">Use TRAVEL20 for 20% off your first booking</span>
+          </div>
+
+          <!-- [API-READY] — Integrate Razorpay: call Razorpay.open() on click -->
+          <button class="btn btn-primary btn-lg" style="width:100%" id="pay-btn" onclick="processPayment()">
+            🔒 Pay Securely — ₹30,000
+          </button>
+
+          <div class="trust-badges">
+            <span class="trust-badge">🔒 SSL Secured</span>
+            <span class="trust-badge">🏦 RBI Compliant</span>
+            <span class="trust-badge">↩️ Easy Refunds</span>
+            <span class="trust-badge">💯 PCI DSS</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDER SUMMARY -->
+      <div class="fade-in">
+        <div class="pay-card" style="margin-bottom:1.5rem">
+          <h3>🧳 Order Summary</h3>
+          <div style="background:linear-gradient(135deg,var(--color-primary),#1a4fab);border-radius:var(--radius-md);padding:1.25rem;margin-bottom:1.5rem;color:#fff">
+            <div style="font-size:1.2rem;font-weight:700;font-family:var(--font-head)">Jaipur Heritage Tour</div>
+            <div style="font-size:.85rem;color:rgba(255,255,255,.75);margin-top:.25rem">Mar 15 – Mar 18 · 3 Nights</div>
+          </div>
+          <div>
+            <div class="summary-row"><span>Hotel (3 nights)</span><strong>₹12,000</strong></div>
+            <div class="summary-row"><span>Food & Dining</span><strong>₹6,000</strong></div>
+            <div class="summary-row"><span>Transport</span><strong>₹6,000</strong></div>
+            <div class="summary-row"><span>Activities & Entry</span><strong>₹4,500</strong></div>
+            <div class="summary-row"><span>Misc.</span><strong>₹1,500</strong></div>
+            <div class="summary-row" style="padding-top:.75rem;font-size:.85rem;color:var(--color-text-muted)"><span>Platform Fee</span><strong>₹0</strong></div>
+            <div class="summary-row" id="discount-row" style="display:none;color:var(--color-success)"><span>Promo Discount</span><strong id="discount-val">-₹0</strong></div>
+            <div class="summary-row" style="font-size:1.1rem;padding-top:.9rem;border-top:2px solid var(--color-border);margin-top:.5rem">
+              <strong>Total</strong><strong id="total-pay" style="color:var(--color-primary)">₹30,000</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="pay-card">
+          <h4 style="margin-bottom:.75rem">🛡️ What's Included</h4>
+          <div style="display:flex;flex-direction:column;gap:.5rem">
+            <div style="display:flex;gap:.5rem;font-size:.87rem;align-items:center"><span style="color:var(--color-success)">✓</span> Day-wise guided itinerary</div>
+            <div style="display:flex;gap:.5rem;font-size:.87rem;align-items:center"><span style="color:var(--color-success)">✓</span> Hotel booking assistance</div>
+            <div style="display:flex;gap:.5rem;font-size:.87rem;align-items:center"><span style="color:var(--color-success)">✓</span> 24/7 traveler support</div>
+            <div style="display:flex;gap:.5rem;font-size:.87rem;align-items:center"><span style="color:var(--color-success)">✓</span> Free cancellation (48hrs)</div>
+            <div style="display:flex;gap:.5rem;font-size:.87rem;align-items:center"><span style="color:var(--color-success)">✓</span> Instant booking confirmation</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><div class="footer-logo"><span style="font-size:1.5rem">✈</span><span>Travel<em>Planner</em></span></div><p>Secure. Reliable. Unforgettable.</p></div>
+      <div><h4>Pages</h4><ul><li><a href="index.html">Home</a></li><li><a href="explore.html">Explore</a></li><li><a href="itinerary.html">Itinerary</a></li></ul></div>
+      <div><h4>Company</h4><ul><li><a href="#">About</a></li><li><a href="#">Blog</a></li></ul></div>
+      <div><h4>Support</h4><ul><li><a href="#">Refunds</a></li><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>© 2026 TravelPlanner</span><span>Payments by Razorpay</span></div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+function selectMethod(el) {
+  document.querySelectorAll('.method-item').forEach(m => m.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input[type="radio"]').checked = true;
+  const val = el.querySelector('input').value;
+  const cf  = document.getElementById('card-fields');
+  cf.style.display = val === 'card' ? '' : 'none';
+}
+function formatCard(inp) {
+  inp.value = inp.value.replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim().slice(0,19);
+}
+function formatExpiry(inp) {
+  inp.value = inp.value.replace(/\D/g,'').replace(/^(\d{2})(\d)/,'$1 / $2').slice(0,7);
+}
+let promoApplied = false;
+function applyPromo() {
+  const code = document.getElementById('promo-code').value.trim().toUpperCase();
+  if (code === 'TRAVEL20' && !promoApplied) {
+    promoApplied = true;
+    document.getElementById('discount-row').style.display = 'flex';
+    document.getElementById('discount-val').textContent = '-₹6,000';
+    document.getElementById('total-pay').textContent = '₹24,000';
+    document.getElementById('pay-btn').textContent = '🔒 Pay Securely — ₹24,000';
+    alert('🎉 Promo code applied! You saved ₹6,000.');
+  } else if (promoApplied) {
+    alert('Promo code already applied!');
+  } else {
+    alert('❌ Invalid promo code. Try TRAVEL20');
+  }
+}
+function processPayment() {
+  // [API-READY] — Initialize Razorpay:
+  // const rzp = new Razorpay({ key:'YOUR_RAZORPAY_KEY', amount:3000000, currency:'INR', ... });
+  // rzp.open();
+  const btn = document.getElementById('pay-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Processing…';
+  setTimeout(() => {
+    alert('✅ Payment Successful!\n\nYour trip to Jaipur is confirmed.\nConfirmation sent to your email.');
+    window.location.href = 'dashboard.html';
+  }, 2000);
+}
+</script>
+</body>
+</html>
