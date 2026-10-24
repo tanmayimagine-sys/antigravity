@@ -14,9 +14,7 @@ import {
   Coins,
   ChevronDown,
   LogOut,
-  UserCheck,
   Shield,
-  Layers,
 } from "lucide-react";
 import { KeyboardHelpDialog } from "./CommandPalette";
 import { AUTH_USERS } from "@/lib/auth/users";
@@ -48,72 +46,60 @@ export function TopBar() {
 
   return (
     <>
-      <header className="h-16 border-b border-border bg-surface px-4 flex items-center justify-between gap-3 sticky top-0 z-20">
-        {/* Left: Tenant Isolated Store Banner OR Investor Portal Banner */}
-        <div className="flex items-center gap-3">
+      <header className="h-14 border-b border-border bg-surface px-4 flex items-center justify-between gap-3 sticky top-0 z-20">
+
+        {/* Left: Store / Investor context */}
+        <div className="flex items-center gap-2.5 min-w-0">
           {isInvestor ? (
-            // Investor Portal Indicator
-            <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-accent/40 bg-accent-soft/30">
-              <div className="w-6 h-6 rounded-md bg-accent text-surface flex items-center justify-center shrink-0 shadow-sm">
-                <Coins className="w-3.5 h-3.5 text-white" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-accent leading-none flex items-center gap-1.5">
-                  Investor Discovery Portal
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-accent/20 text-accent font-semibold">
-                    Simulated
-                  </span>
-                </div>
-                <div className="text-[10px] text-text-muted leading-tight mt-0.5">
-                  {currentUser.name} • 3 Listed Shops Accessible
-                </div>
-              </div>
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-surface-2 border border-border">
+              <Coins className="w-3.5 h-3.5 text-accent shrink-0" />
+              <span className="text-[12px] font-semibold text-text hidden sm:inline">
+                Investor Discovery
+              </span>
+              <span className="text-[10px] px-1.5 rounded bg-accent-soft text-accent font-medium border border-accent/30">
+                Simulated
+              </span>
             </div>
           ) : (
-            // Shop Owner / Staff Locked Indicator (STRICT TENANT ISOLATION)
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setShowTenantLockInfo(!showTenantLockInfo)}
-                className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-primary/30 bg-primary-soft/20 hover:bg-primary-soft/30 transition-colors text-left group"
+                className="flex items-center gap-2 px-2.5 py-1 rounded-md hover:bg-surface-2 transition-colors text-left"
                 title="Strict Tenant Isolation Active"
               >
-                <div className="w-6 h-6 rounded-md bg-primary-soft flex items-center justify-center text-primary-ink shrink-0">
-                  <Store className="w-3.5 h-3.5" />
+                <div className="w-5 h-5 rounded bg-primary-soft flex items-center justify-center shrink-0">
+                  <Store className="w-3 h-3 text-primary-ink" />
                 </div>
-                <div className="hidden sm:block">
-                  <div className="text-xs font-bold text-text leading-none flex items-center gap-1.5">
+                <div className="hidden sm:block min-w-0">
+                  <div className="text-[12.5px] font-semibold text-text leading-none flex items-center gap-1">
                     {activeBusiness.name}
-                    <Lock className="w-3 h-3 text-primary-ink" />
+                    <Lock className="w-2.5 h-2.5 text-text-muted" />
                   </div>
-                  <div className="text-[10px] text-text-muted leading-tight mt-0.5 flex items-center gap-1">
-                    <span>{currentUser.name}</span>
-                    <span>•</span>
-                    <span className="text-primary-ink font-medium">Tenant Locked</span>
+                  <div className="text-[10.5px] text-text-muted leading-none mt-0.5">
+                    {currentUser.name} · Tenant Locked
                   </div>
                 </div>
               </button>
 
-              {/* Explanatory security popover on click */}
+              {/* Security popover */}
               {showTenantLockInfo && (
                 <div
-                  className="absolute left-0 mt-2 w-72 rounded-lg bg-surface border border-border shadow-md p-3 z-40 text-xs space-y-2 animate-in fade-in zoom-in-95"
+                  className="absolute left-0 top-full mt-1.5 w-72 rounded-lg bg-surface border border-border shadow-md p-3.5 z-40 text-xs space-y-2"
                   onMouseLeave={() => setShowTenantLockInfo(false)}
                 >
-                  <div className="flex items-center gap-2 text-primary-ink font-semibold">
-                    <Shield className="w-4 h-4" />
+                  <div className="flex items-center gap-2 font-semibold text-text">
+                    <Shield className="w-3.5 h-3.5 text-primary" />
                     <span>Strict Tenant Isolation</span>
                   </div>
-                  <p className="text-text-muted text-[11px] leading-relaxed">
-                    You are authenticated as <strong>{currentUser.name}</strong>. In accordance with zero-trust security standards, this session is <strong>strictly locked to {activeBusiness.name}</strong>.
+                  <p className="text-text-muted leading-relaxed">
+                    Authenticated as <strong className="text-text">{currentUser.name}</strong>. This session is locked to{" "}
+                    <strong className="text-text">{activeBusiness.name}</strong> — no other shop's data is accessible.
                   </p>
-                  <p className="text-text-muted text-[11px] leading-relaxed">
-                    Other shop owners or external investors cannot view your private reconciliation or modify your settings.
-                  </p>
-                  <div className="pt-1 border-t border-border flex justify-end">
+                  <div className="pt-1.5 border-t border-border flex justify-end">
                     <button
                       onClick={() => setShowTenantLockInfo(false)}
-                      className="text-[11px] text-primary-ink font-semibold hover:underline"
+                      className="text-[11px] text-primary font-semibold hover:underline"
                     >
                       Got it
                     </button>
@@ -123,42 +109,42 @@ export function TopBar() {
             </div>
           )}
 
-          {/* Persistent Synthetic Demo Data Chip */}
-          <div className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-soft text-accent border border-accent/30 text-[11px] font-medium shrink-0">
-            <ShieldCheck className="w-3 h-3 text-accent" />
-            <span>Synthetic demo data</span>
+          {/* Synthetic demo badge */}
+          <div className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-border text-[11px] text-text-muted shrink-0">
+            <ShieldCheck className="w-3 h-3" />
+            <span>Synthetic demo</span>
           </div>
         </div>
 
-        {/* Center / Search bar for Command Palette */}
-        <div className="flex-1 max-w-md hidden md:block">
+        {/* Center: Search / Command palette trigger */}
+        <div className="flex-1 max-w-sm hidden md:block">
           <button
             type="button"
             onClick={() => {
               const event = new KeyboardEvent("keydown", { key: "k", ctrlKey: true });
               document.dispatchEvent(event);
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg border border-border bg-surface-2/60 hover:bg-surface-2 text-text-muted text-xs transition-colors"
+            className="w-full flex items-center justify-between px-3 py-1.5 rounded-md border border-border bg-surface-2/60 hover:bg-surface-2 text-text-muted text-[12px] transition-colors"
           >
             <div className="flex items-center gap-2">
               <Search className="w-3.5 h-3.5" />
-              <span>Search metrics, screens, actions...</span>
+              <span>Search or jump to...</span>
             </div>
             <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-surface border border-border rounded">
-              Ctrl+K
+              ⌘K
             </kbd>
           </button>
         </div>
 
-        {/* Right tools: Date filter, Guided demo, Theme toggle, User & Account Switcher */}
-        <div className="flex items-center gap-2">
-          {/* Date range picker (for Owners/Staff) */}
+        {/* Right: Date, Demo, Help, Theme, User */}
+        <div className="flex items-center gap-1.5">
+          {/* Date range */}
           {!isInvestor && (
             <div className="relative hidden sm:block">
               <button
                 type="button"
                 onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-surface hover:bg-surface-2 text-xs font-medium text-text transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border hover:bg-surface-2 text-[12px] font-medium text-text transition-colors"
               >
                 <Calendar className="w-3.5 h-3.5 text-text-muted" />
                 <span>{dateRange}</span>
@@ -167,7 +153,7 @@ export function TopBar() {
 
               {dateDropdownOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-52 rounded-lg bg-surface border border-border shadow-md py-1 z-40"
+                  className="absolute right-0 mt-1.5 w-56 rounded-lg bg-surface border border-border shadow-md py-1 z-40"
                   onMouseLeave={() => setDateDropdownOpen(false)}
                 >
                   {dateOptions.map((opt) => (
@@ -177,8 +163,10 @@ export function TopBar() {
                         setDateRange(opt);
                         setDateDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-surface-2 ${
-                        opt === dateRange ? "font-semibold text-primary-ink bg-primary-soft/40" : "text-text"
+                      className={`w-full text-left px-3 py-1.5 text-[12px] hover:bg-surface-2 ${
+                        opt === dateRange
+                          ? "font-semibold text-primary"
+                          : "text-text"
                       }`}
                     >
                       {opt}
@@ -189,14 +177,14 @@ export function TopBar() {
             </div>
           )}
 
-          {/* Guided Demo Button */}
+          {/* Guided Demo button */}
           <button
             type="button"
             onClick={() => setGuidedDemoActive(true)}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:bg-primary-hover shadow-sm transition-transform active:scale-[0.98]"
+            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors active:scale-[0.98]"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Guided demo</span>
+            <span>Demo</span>
           </button>
 
           {/* Keyboard Help */}
@@ -204,68 +192,73 @@ export function TopBar() {
             type="button"
             onClick={() => setShowKeyboardHelp(true)}
             title="Keyboard shortcuts (?)"
-            className="w-9 h-9 rounded-md border border-border flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
+            className="w-8 h-8 rounded-md flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
           >
             <HelpCircle className="w-4 h-4" />
           </button>
 
-          {/* Quick Theme Toggle */}
+          {/* Theme Toggle */}
           <ThemeQuickToggle />
 
-          {/* Authenticated User & Account Switcher Dropdown */}
+          {/* User Dropdown */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-              className="flex items-center gap-2 pl-2 pr-2.5 py-1 rounded-lg border border-border bg-surface hover:bg-surface-2 transition-colors"
+              className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-md hover:bg-surface-2 transition-colors"
               aria-haspopup="true"
               aria-expanded={userDropdownOpen}
             >
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm shrink-0 ${
-                isInvestor ? "bg-accent" : "bg-primary"
-              }`}>
+              <div
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                  isInvestor ? "bg-accent text-white" : "bg-primary text-white"
+                }`}
+              >
                 {currentUser.avatarInitials}
               </div>
               <div className="hidden md:block text-left">
-                <div className="text-xs font-bold text-text leading-none">
-                  {currentUser.name}
-                </div>
-                <div className="text-[10px] text-text-muted mt-0.5 leading-tight">
-                  {currentUser.badge}
+                <div className="text-[12px] font-semibold text-text leading-none">
+                  {currentUser.name.split(" ")[0]}
                 </div>
               </div>
-              <ChevronDown className="w-3 h-3 text-text-muted shrink-0" />
+              <ChevronDown className="w-3 h-3 text-text-muted" />
             </button>
 
             {userDropdownOpen && (
               <div
-                className="absolute right-0 mt-2 w-80 rounded-xl bg-surface border border-border shadow-md py-2 z-50 animate-in fade-in zoom-in-95 duration-fast"
+                className="absolute right-0 mt-1.5 w-72 rounded-lg bg-surface border border-border shadow-md py-1.5 z-50"
                 onMouseLeave={() => setUserDropdownOpen(false)}
               >
-                {/* Current User Card */}
-                <div className="px-3.5 py-2 border-b border-border">
+                {/* Current user */}
+                <div className="px-3 py-2 border-b border-border">
                   <div className="flex items-center gap-2.5">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 ${
-                      isInvestor ? "bg-accent" : "bg-primary"
-                    }`}>
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+                        isInvestor ? "bg-accent text-white" : "bg-primary text-white"
+                      }`}
+                    >
                       {currentUser.avatarInitials}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-bold text-text truncate">{currentUser.name}</div>
-                      <div className="text-[11px] text-text-muted truncate">{currentUser.email}</div>
-                      <div className="text-[10px] text-primary-ink font-medium mt-0.5">{currentUser.title}</div>
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-semibold text-text truncate">
+                        {currentUser.name}
+                      </div>
+                      <div className="text-[11px] text-text-muted truncate">
+                        {currentUser.email}
+                      </div>
+                      <div className="text-[10px] text-primary font-medium mt-0.5">
+                        {currentUser.title}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Section Header: Switch Account */}
-                <div className="px-3.5 pt-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center justify-between">
-                  <span>Switch Account / Persona</span>
-                  <span className="text-[9px] font-normal lowercase text-text-muted">isolated credentials</span>
+                {/* Switch account */}
+                <div className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                  Switch Account
                 </div>
 
-                {/* Quick Account Switcher List */}
-                <div className="space-y-0.5 px-1.5 py-1">
+                <div className="px-1.5 space-y-0.5">
                   {AUTH_USERS.map((user) => {
                     const isSelected = user.id === currentUser.id;
                     const isUserInvestor = user.role === "funder";
@@ -276,30 +269,34 @@ export function TopBar() {
                         onClick={() => {
                           switchUser(user.id);
                           setUserDropdownOpen(false);
-                          if (user.role === "funder") {
-                            window.location.href = "/funding";
-                          } else {
-                            window.location.href = "/dashboard";
-                          }
+                          window.location.href =
+                            user.role === "funder" ? "/funding" : "/dashboard";
                         }}
-                        className={`w-full flex items-start gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors ${
+                        className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-left transition-colors ${
                           isSelected
-                            ? "bg-primary-soft/60 font-semibold"
+                            ? "bg-surface-2 font-semibold"
                             : "hover:bg-surface-2"
                         }`}
                       >
-                        <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-0.5 ${
-                          isUserInvestor ? "bg-accent" : "bg-primary"
-                        }`}>
+                        <div
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                            isUserInvestor ? "bg-accent text-white" : "bg-primary text-white"
+                          }`}
+                        >
                           {user.avatarInitials}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs text-text flex items-center gap-1.5">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[12px] text-text flex items-center gap-1.5">
                             <span className="truncate">{user.name}</span>
-                            {isSelected && <span className="text-[9px] px-1 rounded bg-primary text-white">Active</span>}
+                            {isSelected && (
+                              <span className="text-[9px] px-1 rounded bg-surface-2 border border-border text-text-muted shrink-0">
+                                Active
+                              </span>
+                            )}
                           </div>
-                          <div className="text-[10px] text-text-muted truncate">
-                            {user.businessName} {user.city ? `(${user.city})` : ""}
+                          <div className="text-[10.5px] text-text-muted truncate">
+                            {user.businessName}
+                            {user.city ? ` · ${user.city}` : ""}
                           </div>
                         </div>
                       </button>
@@ -307,7 +304,7 @@ export function TopBar() {
                   })}
                 </div>
 
-                {/* Footer: Sign Out */}
+                {/* Sign out */}
                 <div className="pt-1.5 mt-1 border-t border-border px-1.5">
                   <button
                     type="button"
@@ -315,10 +312,10 @@ export function TopBar() {
                       setUserDropdownOpen(false);
                       logout();
                     }}
-                    className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-danger hover:bg-danger-soft transition-colors"
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] font-medium text-danger hover:bg-danger-soft transition-colors"
                   >
                     <LogOut className="w-3.5 h-3.5" />
-                    <span>Sign Out to Login Screen</span>
+                    <span>Sign Out</span>
                   </button>
                 </div>
               </div>

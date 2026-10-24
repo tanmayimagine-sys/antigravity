@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { useBusiness } from "@/components/shell/BusinessContext";
 import { db } from "@/lib/db";
 import { EvidenceChip, useSourceDrawer } from "@/components/ui/SourceDrawer";
@@ -15,8 +16,10 @@ import {
   ArrowRight,
   Database,
   Calendar,
-  Layers,
-  HelpCircle,
+  FileText,
+  UploadCloud,
+  Loader2,
+  X,
 } from "lucide-react";
 
 interface ChatMessage {
@@ -39,24 +42,43 @@ interface ChatMessage {
 
 export default function AIWorkspacePage() {
   const { activeBusiness, dateRange } = useBusiness();
+  const searchParams = useSearchParams();
+  const fileContext = searchParams?.get("file") ?? null; // e.g. ?file=sales_oct.csv
+
   const [inputQuery, setInputQuery] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "msg_init",
-      sender: "ai",
-      content:
-        `Hello Ramesh! I am your Central AI Business Partner for **${activeBusiness.name}**. I have loaded your verified POS sales, UPI merchant settlements, and operating expenses. How can I help you grow or optimize your cash flow today?`,
-      timestamp: "10:30 AM",
-      isSampleResponse: true,
-    },
-  ]);
+  const [fileContextDismissed, setFileContextDismissed] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const initMessage: ChatMessage = {
+    id: "msg_init",
+    sender: "ai",
+    content: fileContext
+      ? `Hello! I can see you've uploaded **${fileContext}** from the Data Centre. I've loaded the parsed transaction data into my context. Ask me anything about it — duplicate entries, category breakdown, anomalies, or what it means for your cash flow.`
+      : `Hello! I am your Central AI Business Partner for **${activeBusiness.name}**. I have loaded your verified POS sales, UPI merchant settlements, and operating expenses. How can I help you grow or optimise your cash flow today?`,
+    timestamp: "Now",
+    isSampleResponse: true,
+  };
+
+  const [messages, setMessages] = useState<ChatMessage[]>([initMessage]);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const starterQuestions = [
-    "Why did sales drop last month?",
-    "Which product should I promote for student exams?",
-    "How healthy is my cash flow for simulated funding?",
-  ];
+  // Auto-scroll to latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isProcessing]);
+
+  const starterQuestions = fileContext
+    ? [
+        `What anomalies did you find in ${fileContext}?`,
+        "Which category had the highest inflow?",
+        "Are there any duplicate transactions I should remove?",
+        "How does this compare to my previous month?",
+      ]
+    : [
+        "Why did sales drop last month?",
+        "Which product should I promote for student exams?",
+        "How healthy is my cash flow for simulated funding?",
+      ];
 
   // Pre-computed, evidence-grounded responses per business
   const getSimulatedAIResponse = (query: string): ChatMessage => {
@@ -178,73 +200,110 @@ export default function AIWorkspacePage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-      {/* Header */}
+    <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-6 space-y-6">
+
+      {/* ── Header ── */}
       <div className="flex items-start sm:items-center justify-between gap-4 flex-wrap">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-[22px] font-semibold text-text tracking-tight">
               Central AI Workspace
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-accent-soft text-accent border border-accent/30 flex items-center gap-1">
+            <span className="text-[11px] px-2 py-0.5 rounded-md font-medium border border-accent/30 bg-accent-soft text-accent flex items-center gap-1">
               <Sparkles className="w-3 h-3" />
-              Evidence-Grounded Intelligence
+              Evidence-Grounded
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-text-muted mt-0.5">
-            Operating exclusively on verified data for <strong>{activeBusiness.name}</strong>
+          <p className="text-[12.5px] text-text-muted mt-0.5">
+            Operating exclusively on verified data for{" "}
+            <span className="font-medium text-text">{activeBusiness.name}</span>
           </p>
         </div>
 
-        {/* Live Gemini Connection Badge */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-soft text-accent border border-accent/40 text-xs font-semibold shadow-sm">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border text-[12px] text-text-muted">
           <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-          <span>Gemini 2.5 Flash Connected (Live)</span>
+          Gemini 2.5 Flash · Live
         </div>
       </div>
 
-      {/* Main 60 / 40 Split View */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left: Chat Stream (7 cols ~ 60%) */}
-        <div className="lg:col-span-7 rounded-xl border border-border bg-surface flex flex-col h-[680px] shadow-sm overflow-hidden">
-          {/* Chat Stream Header */}
-          <div className="p-3.5 border-b border-border bg-surface-2/60 flex items-center justify-between text-xs">
+      {/* ── File context banner (shown when coming from Data Centre upload) ── */}
+      {fileContext && !fileContextDismissed && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-primary/30 bg-primary-soft/30">
+          <FileText className="w-4 h-4 text-primary shrink-0" />
+          <div className="flex-1 min-w-0">
+            <span className="text-[13px] font-semibold text-text">{fileContext}</span>
+            <span className="text-[12px] text-text-muted ml-2">
+              — parsed & loaded into AI context from Data Centre
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              setInputQuery(
+                `Analyse the uploaded file ${fileContext}: summarise total inflow, flag any duplicates or anomalies, and give me 3 actionable recommendations.`
+              )
+            }
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors whitespace-nowrap shrink-0"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            Ask AI about this file
+          </button>
+          <button
+            type="button"
+            onClick={() => setFileContextDismissed(true)}
+            className="w-6 h-6 rounded flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-2 transition-colors shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* ── Main 2-column layout ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+        {/* Left: Chat (7 cols) */}
+        <div className="lg:col-span-7 rounded-lg border border-border bg-surface flex flex-col h-[680px] overflow-hidden">
+
+          {/* Chat header */}
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Bot className="w-4 h-4 text-primary-ink" />
-              <span className="font-semibold text-text">Central AI Orchestrator</span>
+              <div className="w-6 h-6 rounded-md bg-primary-soft flex items-center justify-center">
+                <Bot className="w-3.5 h-3.5 text-primary" />
+              </div>
+              <span className="font-semibold text-[13px] text-text">Central AI Orchestrator</span>
             </div>
-            <span className="text-text-muted">Strict Tenant Isolation Active</span>
+            <span className="text-[11.5px] text-text-muted">Strict Tenant Isolation Active</span>
           </div>
 
-          {/* Messages Scroll Area */}
+          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((m) => (
               <div
                 key={m.id}
-                className={`flex gap-3 text-xs sm:text-sm ${
+                className={`flex gap-2.5 ${
                   m.sender === "user" ? "justify-end" : "justify-start"
                 }`}
               >
                 {m.sender === "ai" && (
-                  <div className="w-7 h-7 rounded-full bg-accent-soft text-accent flex items-center justify-center shrink-0 mt-1">
-                    <Bot className="w-4 h-4" />
+                  <div className="w-7 h-7 rounded-full bg-surface-2 border border-border flex items-center justify-center shrink-0 mt-0.5">
+                    <Bot className="w-3.5 h-3.5 text-text-muted" />
                   </div>
                 )}
 
                 <div
-                  className={`max-w-[85%] rounded-xl p-4 space-y-3 ${
+                  className={`max-w-[85%] rounded-lg p-3.5 space-y-3 text-[13px] ${
                     m.sender === "user"
-                      ? "bg-primary text-on-primary rounded-tr-none"
-                      : "bg-surface-2/80 border border-border text-text rounded-tl-none shadow-sm"
+                      ? "bg-primary text-white rounded-tr-none"
+                      : "bg-surface-2 border border-border text-text rounded-tl-none"
                   }`}
                 >
                   <p className="leading-relaxed whitespace-pre-line">{m.content}</p>
 
-                  {/* Evidence & Confidence Row */}
+                  {/* Evidence & Confidence */}
                   {m.evidenceIds && m.evidenceIds.length > 0 && (
-                    <div className="pt-2 border-t border-border/60 flex items-center justify-between gap-2 flex-wrap text-xs">
+                    <div className="pt-2 border-t border-border/50 flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-text-muted font-semibold text-[11px]">Evidence:</span>
+                        <span className="text-text-muted font-medium text-[10.5px]">Evidence:</span>
                         {m.evidenceIds.map((id) => (
                           <EvidenceChip key={id} id={id} />
                         ))}
@@ -253,14 +312,14 @@ export default function AIWorkspacePage() {
                     </div>
                   )}
 
-                  {/* Unknowns / Missing Data Tag */}
+                  {/* Unknowns */}
                   {m.unknowns && m.unknowns.length > 0 && (
-                    <div className="p-2.5 rounded bg-surface border border-border text-xs text-text-muted space-y-1">
-                      <div className="font-semibold text-warning flex items-center gap-1 text-[11px]">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        <span>Unknowns & Blindspots:</span>
+                    <div className="p-2.5 rounded-md bg-surface border border-warning/20 text-[11.5px] text-text-muted space-y-1">
+                      <div className="font-semibold text-warning flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        Unknowns & Blindspots
                       </div>
-                      <ul className="list-disc pl-4 space-y-0.5 text-[11px]">
+                      <ul className="list-disc pl-4 space-y-0.5">
                         {m.unknowns.map((u, i) => (
                           <li key={i}>{u}</li>
                         ))}
@@ -268,38 +327,33 @@ export default function AIWorkspacePage() {
                     </div>
                   )}
 
-                  {/* Suggested Next Step Action Card */}
+                  {/* Suggested action card */}
                   {m.suggestedAction && (
-                    <div className="p-3 rounded-lg bg-surface border border-primary/30 space-y-2">
-                      <div className="font-bold text-xs text-primary-ink flex items-center gap-1">
+                    <div className="p-3 rounded-md border border-primary/20 bg-primary-soft/20 space-y-2">
+                      <div className="font-semibold text-[12px] text-primary flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>Recommended Owner Action:</span>
+                        Recommended Action: {m.suggestedAction.title}
                       </div>
-                      <div className="font-semibold text-text text-xs">
-                        {m.suggestedAction.title}
-                      </div>
-                      <p className="text-xs text-text-muted">
-                        {m.suggestedAction.actionText}
-                      </p>
-                      <div className="flex items-center justify-between pt-1 border-t border-border text-xs">
-                        <span className="text-accent font-semibold text-[11px]">
+                      <p className="text-[12px] text-text-muted">{m.suggestedAction.actionText}</p>
+                      <div className="flex items-center justify-between pt-1.5 border-t border-border/50 text-[11.5px]">
+                        <span className="text-accent font-medium">
                           Impact: {m.suggestedAction.impact}
                         </span>
                         <a
                           href={m.suggestedAction.targetPath || "/experiments"}
-                          className="inline-flex items-center gap-1 font-semibold text-primary-ink hover:underline text-[11px]"
+                          className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
                         >
-                          <span>Review & Approve</span>
+                          Review & Approve
                           <ArrowRight className="w-3 h-3" />
                         </a>
                       </div>
                     </div>
                   )}
 
-                  {/* Sample AI response badge */}
+                  {/* Sample badge */}
                   {m.isSampleResponse && (
-                    <div className="text-[10px] text-text-muted flex items-center justify-between opacity-80 pt-1">
-                      <span>Sample AI response • Schema Valid</span>
+                    <div className="text-[10px] text-text-muted/60 flex items-center justify-between pt-0.5">
+                      <span>Simulated response · Schema valid</span>
                       <span>{m.timestamp}</span>
                     </div>
                   )}
@@ -308,33 +362,34 @@ export default function AIWorkspacePage() {
             ))}
 
             {isProcessing && (
-              <div className="flex items-center gap-2 text-xs text-text-muted p-3 bg-surface-2/40 rounded-lg animate-pulse">
-                <Bot className="w-4 h-4 text-accent animate-spin" />
-                <span>Checking your records… Retrieving data, running calculations, validating evidence…</span>
+              <div className="flex items-center gap-2 text-[12.5px] text-text-muted px-3 py-2.5 rounded-lg bg-surface-2/50">
+                <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />
+                Checking your records… retrieving data, validating evidence…
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
-          {/* Starter Questions Chips */}
-          <div className="p-2 border-t border-border bg-surface-2/40 flex items-center gap-1.5 overflow-x-auto text-xs">
-            <span className="text-text-muted text-[11px] whitespace-nowrap pl-1">Ask:</span>
+          {/* Starter question chips */}
+          <div className="px-3 py-2 border-t border-border flex items-center gap-1.5 overflow-x-auto">
+            <span className="text-[11px] text-text-muted whitespace-nowrap">Try:</span>
             {starterQuestions.map((sq, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => handleSend(sq)}
-                className="px-2.5 py-1 rounded-full bg-surface border border-border text-text hover:bg-surface-2 whitespace-nowrap transition-colors text-[11px]"
+                className="px-2.5 py-1 rounded-md border border-border bg-surface text-text hover:bg-surface-2 whitespace-nowrap transition-colors text-[11.5px]"
               >
                 {sq}
               </button>
             ))}
           </div>
 
-          {/* Input Box */}
+          {/* Input box */}
           <div className="p-3 border-t border-border bg-surface flex items-center gap-2">
             <input
               type="text"
-              placeholder="Ask a question about your verified sales, margins, or cash flow..."
+              placeholder={fileContext ? `Ask about ${fileContext}…` : "Ask about your verified sales, margins, or cash flow…"}
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -343,100 +398,129 @@ export default function AIWorkspacePage() {
                   handleSend();
                 }
               }}
-              className="flex-1 px-3 py-2.5 rounded-lg border border-border bg-surface text-text text-xs sm:text-sm placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+              className="flex-1 px-3 py-2.5 rounded-md border border-border bg-surface-2 text-text text-[13px] placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus transition-colors"
             />
             <button
               type="button"
               onClick={() => handleSend()}
               disabled={!inputQuery.trim() || isProcessing}
-              className="w-10 h-10 rounded-lg bg-primary text-on-primary flex items-center justify-center hover:bg-primary-hover disabled:opacity-50 transition-colors shrink-0"
+              className="w-9 h-9 rounded-md bg-primary text-white flex items-center justify-center hover:bg-primary-hover disabled:opacity-40 transition-colors shrink-0"
               aria-label="Send query"
             >
-              <Send className="w-4 h-4" />
+              {isProcessing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
             </button>
           </div>
         </div>
 
-        {/* Right: Live Context & Data Coverage Panel (5 cols ~ 40%) */}
+        {/* Right: Context panel (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="rounded-xl border border-border bg-surface p-5 space-y-4 shadow-sm">
-            <div className="flex items-center justify-between border-b border-border pb-3">
+
+          {/* Live context boundary */}
+          <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
-                <Database className="w-4 h-4 text-primary-ink" />
-                <h3 className="font-bold text-sm text-text">Live Context Boundary</h3>
+                <Database className="w-3.5 h-3.5 text-primary" />
+                <h3 className="font-semibold text-[13.5px] text-text">Live Context Boundary</h3>
               </div>
-              <span className="text-[11px] font-mono text-accent">Isolated Context</span>
+              <span className="text-[10.5px] font-mono text-accent">Isolated</span>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3 text-[12px]">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted mb-1">
                   Active Business Tenant
-                </label>
-                <div className="font-semibold text-text text-sm mt-0.5">
-                  {activeBusiness.name}
                 </div>
-                <div className="text-text-muted">{activeBusiness.address}</div>
+                <div className="font-semibold text-[13px] text-text">{activeBusiness.name}</div>
+                <div className="text-text-muted text-[11.5px]">{activeBusiness.address}</div>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted mb-1">
                   Active Date Window
-                </label>
-                <div className="font-medium text-text flex items-center gap-1.5 mt-0.5">
+                </div>
+                <div className="font-medium text-text flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-text-muted" />
-                  <span>{dateRange}</span>
+                  {dateRange}
                 </div>
               </div>
+
+              {/* Uploaded file context */}
+              {fileContext && (
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted mb-1">
+                    Uploaded File in Context
+                  </div>
+                  <div className="flex items-center gap-2 px-2.5 py-2 rounded-md border border-primary/30 bg-primary-soft/20">
+                    <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <span className="font-medium text-primary text-[12px] truncate">{fileContext}</span>
+                  </div>
+                </div>
+              )}
 
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">
-                  Approved Data Sources Loaded
-                </label>
-                <div className="space-y-1.5 mt-1">
-                  <div className="flex items-center justify-between p-2 rounded bg-surface-2 border border-border">
-                    <span>POS Shift Bills (CSV)</span>
-                    <span className="text-success font-semibold flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3" /> 2,410 bills
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between p-2 rounded bg-surface-2 border border-border">
-                    <span>Merchant UPI Settlements</span>
-                    <span className="text-success font-semibold flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3" /> Reconciled
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between p-2 rounded bg-surface-2 border border-border">
-                    <span>Vendor Paper Invoices</span>
-                    <span className="text-warning font-semibold flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3" /> Beta OCR
-                    </span>
-                  </div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted mb-1">
+                  Approved Data Sources
+                </div>
+                <div className="space-y-1.5">
+                  {[
+                    { label: "POS Shift Bills (CSV)", status: "2,410 bills", ok: true },
+                    { label: "Merchant UPI Settlements", status: "Reconciled", ok: true },
+                    { label: "Vendor Paper Invoices", status: "Beta OCR", ok: false },
+                  ].map((src) => (
+                    <div
+                      key={src.label}
+                      className="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-surface-2 border border-border"
+                    >
+                      <span className="text-[12px] text-text">{src.label}</span>
+                      <span className={`flex items-center gap-1 text-[11.5px] font-medium ${
+                        src.ok ? "text-success" : "text-warning"
+                      }`}>
+                        {src.ok ? (
+                          <ShieldCheck className="w-3 h-3" />
+                        ) : (
+                          <AlertTriangle className="w-3 h-3" />
+                        )}
+                        {src.status}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Missing Information Notice */}
-              <div className="p-3 rounded-lg bg-warning-soft/40 border border-warning/30 text-warning space-y-1">
-                <span className="font-semibold block text-[11px]">
-                  What data is missing?
-                </span>
-                <p className="leading-relaxed text-[11px]">
-                  Paper supplier handwritten GST breakdown has 1 unconfirmed field. Central AI explicitly flags this uncertainty when computing net margins.
-                </p>
+              <div className="px-3 py-2.5 rounded-md border border-warning/20 bg-warning-soft/20 text-[11.5px] text-text-muted">
+                <span className="font-semibold text-warning block mb-0.5">What data is missing?</span>
+                Paper supplier handwritten GST breakdown has 1 unconfirmed field. AI explicitly flags this uncertainty when computing net margins.
               </div>
             </div>
           </div>
 
-          {/* Core Trust Cues Box */}
-          <div className="rounded-xl border border-border bg-surface-2/60 p-4 space-y-2 text-xs text-text-muted">
-            <div className="font-semibold text-text flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-accent" />
-              <span>Orchestrator Trust Standard</span>
+          {/* Trust cues */}
+          <div className="rounded-lg border border-border bg-surface-2/40 p-4 space-y-2">
+            <div className="font-semibold text-[13px] text-text flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-accent" />
+              Orchestrator Trust Standard
             </div>
-            <p className="leading-relaxed">
-              Central AI is prohibited from performing unverified arithmetic or inventing missing figures. All numbers originate from deterministic tools. Click any evidence chip to inspect the underlying source document.
+            <p className="text-[12px] text-text-muted leading-relaxed">
+              Central AI is prohibited from inventing figures or performing unverified arithmetic. All numbers originate from deterministic tools. Click any evidence chip to inspect the source document.
             </p>
           </div>
+
+          {/* Quick nav to upload more */}
+          <a
+            href="/data-centre"
+            className="flex items-center gap-2.5 px-4 py-3 rounded-lg border border-border bg-surface hover:bg-surface-2 transition-colors"
+          >
+            <UploadCloud className="w-4 h-4 text-text-muted shrink-0" />
+            <div className="min-w-0">
+              <div className="text-[12.5px] font-medium text-text">Upload more files</div>
+              <div className="text-[11px] text-text-muted">Data Centre → Process & Analyse</div>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-text-muted ml-auto" />
+          </a>
         </div>
       </div>
     </div>

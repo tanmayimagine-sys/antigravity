@@ -14,9 +14,8 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  Building,
   KeyRound,
-  CheckCircle2,
+  Briefcase,
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -31,15 +30,11 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const shopOwners = AUTH_USERS.filter((u) => u.role === "owner");
-  const investor = AUTH_USERS.find((u) => u.role === "funder")!;
+  const investor   = AUTH_USERS.find((u) => u.role === "funder")!;
 
   const handleInstantLogin = (user: AuthUser) => {
     switchUser(user.id);
-    if (user.role === "funder") {
-      router.push("/funding");
-    } else {
-      router.push("/dashboard");
-    }
+    router.push(user.role === "funder" ? "/funding" : "/dashboard");
   };
 
   const handleFormLogin = (e: React.FormEvent) => {
@@ -56,81 +51,67 @@ export default function LoginPage() {
         return;
       }
 
-      // Check user role
-      if (email.toLowerCase().includes("investor")) {
-        router.push("/funding");
-      } else {
-        router.push("/dashboard");
-      }
+      router.push(email.toLowerCase().includes("investor") ? "/funding" : "/dashboard");
     }, 300);
   };
 
+  const tabs = [
+    { id: "owners" as const, label: "Shop Owners", icon: Store },
+    { id: "investor" as const, label: "Investor Portal", icon: Briefcase },
+    { id: "login_form" as const, label: "Sign In Form", icon: KeyRound },
+  ];
+
   return (
-    <div className="min-h-[85vh] flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl space-y-8 animate-in fade-in">
-        {/* Header */}
+    <div className="min-h-[85vh] flex items-center justify-center p-5">
+      <div className="w-full max-w-3xl space-y-8">
+
+        {/* ── Header ── */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-soft text-primary-ink text-xs font-semibold border border-primary/20">
-            <Lock className="w-3.5 h-3.5" />
-            <span>Strict Tenant Isolation & Role-Based Access</span>
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-border text-[11.5px] text-text-muted">
+            <Lock className="w-3 h-3" />
+            Strict Tenant Isolation & Role-Based Access
           </div>
-          <h1 className="text-3xl font-extrabold text-text tracking-tight">
-            Central AI Operating System Sign In
+          <h1 className="text-[28px] font-bold text-text tracking-tight">
+            Central AI OS — Sign In
           </h1>
-          <p className="text-sm text-text-muted max-w-lg mx-auto">
-            Each shop has its own credentials and isolated database. Investors access the multi-business capital discovery portal.
+          <p className="text-[13px] text-text-muted max-w-md mx-auto leading-relaxed">
+            Each shop has its own credentials and isolated database. Investors access the
+            multi-business capital discovery portal.
           </p>
         </div>
 
-        {/* Tab Selection */}
-        <div className="flex items-center justify-center gap-2 border-b border-border pb-2">
-          <button
-            type="button"
-            onClick={() => { setActiveTab("owners"); setError(null); }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2 ${
-              activeTab === "owners"
-                ? "bg-primary text-on-primary shadow-sm"
-                : "text-text-muted hover:bg-surface-2 hover:text-text"
-            }`}
-          >
-            <Store className="w-3.5 h-3.5" />
-            <span>🏬 Shop Owners (Har Dukaan Ka Login)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { setActiveTab("investor"); setError(null); }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2 ${
-              activeTab === "investor"
-                ? "bg-accent text-white shadow-sm"
-                : "text-text-muted hover:bg-surface-2 hover:text-text"
-            }`}
-          >
-            <Coins className="w-3.5 h-3.5" />
-            <span>💼 Investor & Syndicate Portal</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { setActiveTab("login_form"); setError(null); }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2 ${
-              activeTab === "login_form"
-                ? "bg-surface-2 text-text border border-border"
-                : "text-text-muted hover:bg-surface-2 hover:text-text"
-            }`}
-          >
-            <KeyRound className="w-3.5 h-3.5" />
-            <span>Custom Sign In Form</span>
-          </button>
+        {/* ── Tabs ── */}
+        <div className="flex items-center justify-center">
+          <div className="inline-flex border border-border rounded-lg p-1 bg-surface-2 gap-0.5">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => { setActiveTab(tab.id); setError(null); }}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-[12.5px] font-medium transition-colors ${
+                    isActive
+                      ? "bg-surface text-text border border-border shadow-sm"
+                      : "text-text-muted hover:text-text"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* TAB 1: SHOP OWNERS (3 DISTINCT SHOPS) */}
+        {/* ── Tab: Shop Owners ── */}
         {activeTab === "owners" && (
           <div className="space-y-4">
-            <div className="p-3.5 rounded-lg bg-primary-soft/30 border border-primary/20 text-xs text-text-muted flex items-center gap-2.5">
-              <Shield className="w-4 h-4 text-primary-ink shrink-0" />
+            <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-md border border-border bg-surface text-[12px] text-text-muted">
+              <Shield className="w-4 h-4 text-primary shrink-0" />
               <span>
-                <strong>Zero Cross-Tenant Bleed:</strong> Logging into a store locks your session strictly to that business. You cannot view or modify another shop owner&apos;s records.
+                <strong className="text-text">Zero Cross-Tenant Bleed:</strong> Logging into a store locks your session strictly to that business. You cannot view or modify another owner&apos;s records.
               </span>
             </div>
 
@@ -138,34 +119,34 @@ export default function LoginPage() {
               {shopOwners.map((owner) => (
                 <div
                   key={owner.id}
-                  className="rounded-xl border border-border bg-surface p-5 space-y-4 shadow-sm hover:border-primary/50 transition-all flex flex-col justify-between group"
+                  className="rounded-lg border border-border bg-surface p-4 space-y-4 flex flex-col justify-between hover:border-primary/40 transition-colors"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="w-10 h-10 rounded-lg bg-primary-soft text-primary-ink flex items-center justify-center font-bold text-sm">
+                      <div className="w-9 h-9 rounded-md bg-surface-2 border border-border flex items-center justify-center font-bold text-[13px] text-text">
                         {owner.avatarInitials}
                       </div>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-surface-2 font-semibold text-text-muted border border-border">
+                      <span className="text-[10.5px] px-2 py-0.5 rounded-md border border-border bg-surface-2 text-text-muted font-medium">
                         {owner.city}
                       </span>
                     </div>
 
                     <div>
-                      <h3 className="font-bold text-base text-text">{owner.businessName}</h3>
-                      <p className="text-xs text-text-muted mt-0.5">{owner.businessCategory}</p>
+                      <h3 className="font-semibold text-[14px] text-text">{owner.businessName}</h3>
+                      <p className="text-[11.5px] text-text-muted mt-0.5">{owner.businessCategory}</p>
                     </div>
 
-                    <div className="p-2.5 rounded bg-surface-2 border border-border text-[11px] space-y-1">
-                      <div className="flex justify-between text-text">
-                        <span className="text-text-muted">Owner:</span>
-                        <span className="font-semibold">{owner.name}</span>
+                    <div className="rounded-md bg-surface-2 border border-border p-2.5 text-[11.5px] space-y-1.5">
+                      <div className="flex justify-between">
+                        <span className="text-text-muted">Owner</span>
+                        <span className="font-medium text-text">{owner.name}</span>
                       </div>
-                      <div className="flex justify-between text-text">
-                        <span className="text-text-muted">Email:</span>
-                        <span className="font-mono text-primary-ink">{owner.email}</span>
+                      <div className="flex justify-between">
+                        <span className="text-text-muted">Email</span>
+                        <span className="font-mono text-primary text-[11px]">{owner.email}</span>
                       </div>
-                      <div className="flex justify-between text-text">
-                        <span className="text-text-muted">Password:</span>
+                      <div className="flex justify-between">
+                        <span className="text-text-muted">Password</span>
                         <span className="font-mono text-text-muted">{owner.password}</span>
                       </div>
                     </div>
@@ -174,9 +155,9 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => handleInstantLogin(owner)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-on-primary text-xs font-bold hover:bg-primary-hover shadow-sm transition-transform active:scale-[0.98]"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-primary text-white text-[12.5px] font-semibold hover:bg-primary-hover transition-colors active:scale-[0.98]"
                   >
-                    <span>Sign In to {owner.businessName.split(" ")[0]}</span>
+                    Sign In to {owner.businessName.split(" ")[0]}
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -185,106 +166,109 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* TAB 2: INVESTOR & SYNDICATE PORTAL */}
+        {/* ── Tab: Investor Portal ── */}
         {activeTab === "investor" && (
-          <div className="max-w-xl mx-auto rounded-xl border border-accent/40 bg-surface p-6 sm:p-8 space-y-6 shadow-md animate-in fade-in">
+          <div className="max-w-lg mx-auto rounded-lg border border-border bg-surface p-6 space-y-5">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-accent text-white flex items-center justify-center shadow-sm shrink-0">
-                <Coins className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 rounded-lg bg-accent-soft flex items-center justify-center shrink-0">
+                <Briefcase className="w-5 h-5 text-accent" />
               </div>
               <div>
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-accent-soft text-accent">
+                <span className="text-[10.5px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md border border-border bg-surface-2 text-text-muted">
                   Marketplace Discovery Role
                 </span>
-                <h3 className="font-extrabold text-xl text-text mt-1">
+                <h3 className="font-bold text-[18px] text-text mt-1">
                   Growth Syndicate Investor Portal
                 </h3>
               </div>
             </div>
 
-            <p className="text-xs text-text-muted leading-relaxed">
-              Investors receive multi-business discovery access to evaluate verified Business Health Profiles (BHP 0-100), 30-day gross sales, and net cash flow across all listed shops.
+            <p className="text-[12.5px] text-text-muted leading-relaxed">
+              Investors receive multi-business discovery access to evaluate verified Business
+              Health Profiles (BHP 0–100), 30-day gross sales, and net cash flow across all
+              listed shops.
             </p>
 
-            <div className="p-3.5 rounded-lg bg-surface-2 border border-border text-xs space-y-2">
-              <div className="flex justify-between">
-                <span className="text-text-muted">Accredited Investor:</span>
-                <span className="font-bold text-text">{investor.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-muted">Fund / Syndicate:</span>
-                <span className="font-medium text-text">{investor.businessName}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-muted">Investor Email:</span>
-                <span className="font-mono text-accent font-semibold">{investor.email}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-muted">Access Scope:</span>
-                <span className="font-semibold text-accent">All 3 Listed Businesses (Simulated)</span>
-              </div>
+            <div className="rounded-md bg-surface-2 border border-border p-3 text-[12px] space-y-2">
+              {[
+                { label: "Accredited Investor", value: investor.name },
+                { label: "Fund / Syndicate",    value: investor.businessName },
+                { label: "Investor Email",       value: investor.email, mono: true, highlight: true },
+                { label: "Access Scope",         value: "All 3 Listed Businesses (Simulated)", accent: true },
+              ].map((row) => (
+                <div key={row.label} className="flex justify-between">
+                  <span className="text-text-muted">{row.label}</span>
+                  <span
+                    className={`font-medium ${
+                      row.mono ? "font-mono text-[11px]" : ""
+                    } ${row.highlight ? "text-primary" : row.accent ? "text-accent" : "text-text"}`}
+                  >
+                    {row.value}
+                  </span>
+                </div>
+              ))}
             </div>
 
-            <div className="p-3 rounded-lg bg-accent-soft/30 border border-accent/20 text-[11px] text-text-muted space-y-1">
-              <div className="font-semibold text-accent flex items-center gap-1.5">
-                <Lock className="w-3 h-3" />
-                <span>Security Assurance</span>
-              </div>
+            <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-md border border-border bg-surface text-[11.5px] text-text-muted">
+              <Lock className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
               <p>
-                Investors CANNOT view internal private POS registers, cannot modify store reconciliation, and cannot alter shop settings.
+                Investors <strong className="text-text">cannot</strong> view internal POS registers,
+                modify store reconciliation, or alter shop settings.
               </p>
             </div>
 
             <button
               type="button"
               onClick={() => handleInstantLogin(investor)}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-accent text-white font-bold text-sm hover:opacity-95 shadow-md transition-transform active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 px-6 py-2.5 rounded-md bg-accent text-white font-semibold text-[13px] hover:opacity-90 transition-opacity active:scale-[0.98]"
             >
-              <span>Enter Investor Discovery Portal</span>
+              Enter Investor Discovery Portal
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        {/* TAB 3: CUSTOM SIGN IN FORM */}
+        {/* ── Tab: Sign In Form ── */}
         {activeTab === "login_form" && (
-          <div className="max-w-md mx-auto rounded-xl border border-border bg-surface p-6 sm:p-8 space-y-5 shadow-sm animate-in fade-in">
+          <div className="max-w-sm mx-auto rounded-lg border border-border bg-surface p-6 space-y-5">
             <div>
-              <h3 className="font-bold text-lg text-text">Sign In with Credentials</h3>
-              <p className="text-xs text-text-muted mt-0.5">
+              <h3 className="font-semibold text-[16px] text-text">Sign In with Credentials</h3>
+              <p className="text-[12px] text-text-muted mt-0.5">
                 Enter your registered store owner or investor email.
               </p>
             </div>
 
             {error && (
-              <div className="p-3 rounded-lg bg-danger-soft text-danger border border-danger/30 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-md border border-danger/30 bg-danger-soft text-danger text-[12px]">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleFormLogin} className="space-y-4 text-xs">
-              <div>
-                <label className="font-semibold text-text block mb-1">Email Address</label>
+            <form onSubmit={handleFormLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[12.5px] font-medium text-text block">
+                  Email Address
+                </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. owner@vidya.demo or investor@venture.demo"
-                  className="w-full p-2.5 rounded-lg border border-border bg-surface text-text text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                  placeholder="owner@vidya.demo"
+                  className="w-full px-3 py-2 rounded-md border border-border bg-surface-2 text-text text-[13px] placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:border-primary transition-colors"
                   required
                 />
               </div>
 
-              <div>
-                <label className="font-semibold text-text block mb-1">Password</label>
+              <div className="space-y-1.5">
+                <label className="text-[12.5px] font-medium text-text block">Password</label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="password123"
-                    className="w-full p-2.5 pr-10 rounded-lg border border-border bg-surface text-text text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                    className="w-full px-3 py-2 pr-10 rounded-md border border-border bg-surface-2 text-text text-[13px] placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:border-primary transition-colors"
                     required
                   />
                   <button
@@ -295,17 +279,18 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
-                <span className="text-[10px] text-text-muted mt-1 block">
-                  Default demonstration password: <code className="font-mono text-primary-ink">password123</code>
-                </span>
+                <p className="text-[11px] text-text-muted">
+                  Demo password:{" "}
+                  <code className="font-mono text-primary">password123</code>
+                </p>
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-on-primary font-bold text-xs hover:bg-primary-hover shadow-sm transition-transform active:scale-[0.98] disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-primary text-white font-semibold text-[13px] hover:bg-primary-hover transition-colors active:scale-[0.98] disabled:opacity-50"
               >
-                {isLoading ? <span>Authenticating...</span> : <span>Sign In</span>}
+                {isLoading ? "Authenticating..." : "Sign In"}
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </form>

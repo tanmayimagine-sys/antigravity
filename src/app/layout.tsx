@@ -12,7 +12,8 @@ import { GuidedDemoTour } from "@/components/shell/GuidedDemoTour";
 
 export const metadata: Metadata = {
   title: "Central AI Micro-Business Operating System",
-  description: "Connected AI Operating System for Indian Micro-Businesses (Cafés, Stationery, Retail)",
+  description:
+    "Connected AI Operating System for Indian Micro-Businesses (Cafés, Stationery, Retail)",
 };
 
 export default function RootLayout({
@@ -24,6 +25,17 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <ThemeScript />
+        {/* Inter font via Google Fonts */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;700&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body className="min-h-screen bg-bg text-text antialiased selection:bg-primary-soft selection:text-primary-ink">
         <ThemeProvider>

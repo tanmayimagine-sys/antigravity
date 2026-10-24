@@ -11,10 +11,7 @@ import {
   RotateCcw,
   ShieldCheck,
   Download,
-  Trash2,
   Check,
-  Eye,
-  Activity,
   Sliders,
   Settings as SettingsIcon,
 } from "lucide-react";
@@ -64,87 +61,71 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="max-w-4xl mx-auto px-5 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-[22px] font-semibold text-text tracking-tight">
             Settings & Preferences
           </h1>
-          <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-surface-2 border border-border text-text-muted">
+          <span className="text-[11px] px-2 py-0.5 rounded-md font-medium border border-border bg-surface-2 text-text-muted">
             Appearance & System
           </span>
         </div>
-        <p className="text-xs sm:text-sm text-text-muted mt-0.5">
+        <p className="text-[12.5px] text-text-muted mt-0.5">
           Theme customization, adaptive schedule, data privacy, and demo tools.
         </p>
       </div>
 
       {toast && (
-        <div className="p-3 rounded-lg bg-success-soft text-success border border-success/30 text-xs font-semibold animate-in fade-in">
+        <div className="p-3 rounded-md border border-success/30 bg-success-soft text-success text-[12.5px] font-medium">
           ✓ {toast}
         </div>
       )}
 
       {/* Settings Navigation Tabs */}
-      <div className="border-b border-border flex items-center gap-6 text-sm">
-        <button
-          type="button"
-          onClick={() => setActiveTab("appearance")}
-          className={`py-2.5 font-semibold transition-colors border-b-2 -mb-px flex items-center gap-2 ${
-            activeTab === "appearance"
-              ? "border-primary text-primary-ink"
-              : "border-transparent text-text-muted hover:text-text"
-          }`}
-        >
-          <Sliders className="w-4 h-4" />
-          <span>Appearance & Theme</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab("business")}
-          className={`py-2.5 font-semibold transition-colors border-b-2 -mb-px flex items-center gap-2 ${
-            activeTab === "business"
-              ? "border-primary text-primary-ink"
-              : "border-transparent text-text-muted hover:text-text"
-          }`}
-        >
-          <SettingsIcon className="w-4 h-4" />
-          <span>Business Identity</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab("privacy")}
-          className={`py-2.5 font-semibold transition-colors border-b-2 -mb-px flex items-center gap-2 ${
-            activeTab === "privacy"
-              ? "border-primary text-primary-ink"
-              : "border-transparent text-text-muted hover:text-text"
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4" />
-          <span>Data, Privacy & Demo Reset</span>
-        </button>
+      <div className="border-b border-border flex items-center gap-0 text-[13px]">
+        {[
+          { id: "appearance" as const, label: "Appearance & Theme", icon: Sliders },
+          { id: "business"   as const, label: "Business Identity",  icon: SettingsIcon },
+          { id: "privacy"    as const, label: "Data & Privacy",      icon: ShieldCheck },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-4 py-2.5 border-b-2 -mb-px font-medium transition-colors ${
+                isActive
+                  ? "border-primary text-primary"
+                  : "border-transparent text-text-muted hover:text-text"
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Tab 1: Appearance & Theme (Required by Section 6) */}
+      {/* Tab 1: Appearance & Theme */}
       {activeTab === "appearance" && (
-        <div className="space-y-6 animate-in fade-in">
-          {/* Segmented Control */}
-          <div className="rounded-xl border border-border bg-surface p-5 space-y-4 shadow-sm">
+        <div className="space-y-5">
+          {/* Theme mode selector */}
+          <div className="rounded-lg border border-border bg-surface p-5 space-y-4">
             <div>
-              <h3 className="font-bold text-base text-text">Theme Mode</h3>
-              <p className="text-xs text-text-muted">
+              <h3 className="font-semibold text-[14px] text-text">Theme Mode</h3>
+              <p className="text-[12px] text-text-muted mt-0.5">
                 Select your preferred visual style or let it adapt automatically to your local time.
               </p>
             </div>
 
-            {/* 3-Option Segmented Control */}
             <div
               role="radiogroup"
               aria-label="Theme mode"
-              className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-1 rounded-xl bg-surface-2 border border-border"
+              className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-1 rounded-lg bg-surface-2 border border-border"
             >
               {options.map((opt) => {
                 const Icon = opt.icon;
@@ -160,93 +141,94 @@ export default function SettingsPage() {
                       setToast(`Theme set to ${opt.label} mode.`);
                       setTimeout(() => setToast(null), 2500);
                     }}
-                    className={`p-3 rounded-lg text-left transition-all duration-fast flex flex-col justify-between space-y-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
+                    className={`p-3 rounded-md text-left transition-all flex flex-col gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
                       isSelected
-                        ? "bg-surface text-primary-ink shadow-sm border border-border/80 font-semibold"
+                        ? "bg-surface border border-border shadow-sm"
                         : "text-text hover:bg-surface/50"
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <Icon className={`w-5 h-5 ${isSelected ? "text-primary-ink" : "text-text-muted"}`} />
-                      {isSelected && <Check className="w-4 h-4 text-primary-ink" />}
+                      <Icon className={`w-4 h-4 ${isSelected ? "text-primary" : "text-text-muted"}`} />
+                      {isSelected && <Check className="w-3.5 h-3.5 text-primary" />}
                     </div>
                     <div>
-                      <div className="text-sm font-bold">{opt.label}</div>
-                      <div className="text-[11px] text-text-muted font-normal mt-0.5">{opt.desc}</div>
+                      <div className={`text-[13px] font-semibold ${isSelected ? "text-text" : "text-text-muted"}`}>{opt.label}</div>
+                      <div className="text-[11px] text-text-muted mt-0.5">{opt.desc}</div>
                     </div>
                   </button>
                 );
               })}
             </div>
 
-            {/* Adaptive Mode Schedule Adjuster */}
+            {/* Adaptive schedule adjuster */}
             {mode === "adaptive" && (
-              <div className="p-4 rounded-xl bg-surface-2/60 border border-border space-y-3 pt-4">
+              <div className="p-4 rounded-lg bg-surface-2 border border-border space-y-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="font-semibold text-xs text-text flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-accent" />
-                    <span>Adaptive Schedule (Local Clock)</span>
+                  <div className="text-[13px] font-medium text-text flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-accent" />
+                    Adaptive Schedule (Local Clock)
                   </div>
-                  {/* Live Status Preview */}
-                  <span className="text-xs font-mono font-bold text-accent px-2 py-0.5 rounded bg-surface border border-border">
-                    Right now: {resolvedTheme === "dark" ? "Dark" : "Light"} • Switches at {nextSwitchTime}
+                  <span className="text-[11px] font-mono text-accent px-2 py-0.5 rounded-md border border-border bg-surface">
+                    Now: {resolvedTheme === "dark" ? "Dark" : "Light"} · Switches at {nextSwitchTime}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[12px]">
                   <div>
-                    <label className="text-text-muted block mb-1 font-medium">Light mode starts at:</label>
+                    <label className="text-text-muted block mb-1 font-medium">Light mode starts:</label>
                     <input
                       type="time"
                       value={schedule.lightStart}
                       onChange={(e) => setSchedule({ lightStart: e.target.value })}
-                      className="p-2 rounded-lg border border-border bg-surface text-text font-mono font-semibold text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                      className="px-3 py-2 rounded-md border border-border bg-surface text-text font-mono text-[12px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                     />
                   </div>
                   <div>
-                    <label className="text-text-muted block mb-1 font-medium">Dark mode starts at:</label>
+                    <label className="text-text-muted block mb-1 font-medium">Dark mode starts:</label>
                     <input
                       type="time"
                       value={schedule.darkStart}
                       onChange={(e) => setSchedule({ darkStart: e.target.value })}
-                      className="p-2 rounded-lg border border-border bg-surface text-text font-mono font-semibold text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                      className="px-3 py-2 rounded-md border border-border bg-surface text-text font-mono text-[12px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                     />
                   </div>
                 </div>
 
-                <p className="text-[11px] text-text-muted leading-tight">
-                  No location permission required. Switches automatically across boundary times without page reloading.
+                <p className="text-[11px] text-text-muted">
+                  No location permission required. Switches automatically without page reloading.
                 </p>
               </div>
             )}
           </div>
 
-          {/* Accessibility & Motion Settings */}
-          <div className="rounded-xl border border-border bg-surface p-5 space-y-4 shadow-sm">
+          {/* Motion & Accessibility */}
+          <div className="rounded-lg border border-border bg-surface p-5 space-y-4">
             <div>
-              <h3 className="font-bold text-base text-text">Motion & Accessibility</h3>
-              <p className="text-xs text-text-muted">
+              <h3 className="font-semibold text-[14px] text-text">Motion & Accessibility</h3>
+              <p className="text-[12px] text-text-muted mt-0.5">
                 Fine-tune transitions and animation speed for accessibility comfort.
               </p>
             </div>
 
-            <div className="flex items-center justify-between p-3.5 rounded-lg bg-surface-2/60 border border-border">
-              <div className="space-y-0.5">
-                <span className="font-semibold text-xs text-text">Reduce Motion</span>
-                <p className="text-xs text-text-muted">
-                  Disables page slides and number count-ups in favor of instant transitions.
+            <div className="flex items-center justify-between p-3.5 rounded-md bg-surface-2 border border-border">
+              <div>
+                <span className="font-medium text-[13px] text-text block">Reduce Motion</span>
+                <p className="text-[11.5px] text-text-muted mt-0.5">
+                  Disables page slides and transitions in favor of instant renders.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setReduceMotion(!reduceMotion)}
-                className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${
+                aria-checked={reduceMotion}
+                role="switch"
+                className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${
                   reduceMotion ? "bg-primary" : "bg-border"
                 }`}
               >
                 <span
-                  className={`block w-4 h-4 rounded-full bg-white shadow-sm transition-transform transform ${
-                    reduceMotion ? "translate-x-6" : "translate-x-1"
+                  className={`block w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform absolute top-[3px] ${
+                    reduceMotion ? "translate-x-[22px]" : "translate-x-[3px]"
                   }`}
                 />
               </button>
@@ -257,68 +239,60 @@ export default function SettingsPage() {
 
       {/* Tab 2: Business Profile */}
       {activeTab === "business" && (
-        <div className="rounded-xl border border-border bg-surface p-5 space-y-4 shadow-sm animate-in fade-in">
-          <h3 className="font-bold text-base text-text">Active Business Details</h3>
-          <div className="space-y-3 text-xs">
-            <div>
-              <label className="text-text-muted block mb-1 font-medium">Business Name</label>
-              <div className="p-2.5 rounded-lg border border-border bg-surface-2 font-semibold text-text">
-                {activeBusiness.name}
+        <div className="rounded-lg border border-border bg-surface p-5 space-y-4">
+          <h3 className="font-semibold text-[14px] text-text">Active Business Details</h3>
+          <div className="space-y-3 text-[12.5px]">
+            {[
+              { label: "Business Name", value: activeBusiness.name },
+              { label: "Category",      value: activeBusiness.categoryLabel },
+              { label: "Address",       value: `${activeBusiness.address}, ${activeBusiness.city}, ${activeBusiness.state} — ${activeBusiness.pincode}` },
+            ].map((row) => (
+              <div key={row.label}>
+                <label className="text-[11px] font-medium text-text-muted block mb-1">{row.label}</label>
+                <div className="px-3 py-2 rounded-md border border-border bg-surface-2 font-medium text-text">
+                  {row.value}
+                </div>
               </div>
-            </div>
-            <div>
-              <label className="text-text-muted block mb-1 font-medium">Category</label>
-              <div className="p-2.5 rounded-lg border border-border bg-surface-2 font-medium text-text">
-                {activeBusiness.categoryLabel}
-              </div>
-            </div>
-            <div>
-              <label className="text-text-muted block mb-1 font-medium">Address</label>
-              <div className="p-2.5 rounded-lg border border-border bg-surface-2 font-medium text-text">
-                {activeBusiness.address}, {activeBusiness.city}, {activeBusiness.state} - {activeBusiness.pincode}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       )}
 
       {/* Tab 3: Privacy & Demo Reset */}
       {activeTab === "privacy" && (
-        <div className="space-y-4 animate-in fade-in">
-          <div className="rounded-xl border border-border bg-surface p-5 space-y-4 shadow-sm">
-            <h3 className="font-bold text-base text-text">Data Privacy & Sovereignty</h3>
-            <p className="text-xs text-text-muted leading-relaxed">
-              Every micro-business owns its financial records. You can download your complete tenant records or wipe synthetic modifications at any time.
+        <div className="space-y-4">
+          <div className="rounded-lg border border-border bg-surface p-5 space-y-4">
+            <h3 className="font-semibold text-[14px] text-text">Data Privacy & Sovereignty</h3>
+            <p className="text-[12.5px] text-text-muted leading-relaxed">
+              Every micro-business owns its financial records. Download your complete tenant records or wipe synthetic modifications at any time.
             </p>
-
-            <div className="flex items-center gap-3 pt-2">
+            <div>
               <button
                 type="button"
                 onClick={handleExportData}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-border bg-surface hover:bg-surface-2 text-xs font-semibold text-text transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-md border border-border hover:bg-surface-2 text-[12.5px] font-medium text-text transition-colors"
               >
                 <Download className="w-3.5 h-3.5 text-text-muted" />
-                <span>Export Tenant Records (JSON)</span>
+                Export Tenant Records (JSON)
               </button>
             </div>
           </div>
 
-          {/* Reset Demo Data Button (Section 11) */}
-          <div className="rounded-xl border border-warning/40 bg-warning-soft/20 p-5 space-y-3">
-            <div className="flex items-center gap-2 text-warning">
-              <RotateCcw className="w-4 h-4" />
-              <h4 className="font-bold text-sm">Reset Synthetic Demo Data</h4>
+          <div className="rounded-lg border border-warning/30 bg-warning-soft/30 p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 text-warning" />
+              <h4 className="font-semibold text-[14px] text-text">Reset Synthetic Demo Data</h4>
             </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              Resets all 3 demo businesses (Vidya Stationery, Scoops & Swirls, Chai & Chutney) back to the clean seed baseline. Unmatched exceptions and recommendations will re-appear for demonstration.
+            <p className="text-[12.5px] text-text-muted leading-relaxed">
+              Resets all 3 demo businesses back to the clean seed baseline. Unmatched exceptions and recommendations will re-appear for demonstration.
             </p>
             <button
               type="button"
               onClick={handleResetData}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-warning text-white text-xs font-bold hover:bg-warning/90 shadow-sm transition-transform active:scale-[0.98]"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-md border border-warning/40 text-warning text-[12.5px] font-semibold hover:bg-warning-soft transition-colors active:scale-[0.98]"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset All Synthetic Data</span>
+              Reset All Synthetic Data
             </button>
           </div>
         </div>
