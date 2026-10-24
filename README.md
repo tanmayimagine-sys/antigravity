@@ -1,3 +1,4 @@
+
 # Central AI Micro-Business Operating System
 ### Connected Operating System for Indian Micro-Businesses (Version 2.0)
 
@@ -147,3 +148,4 @@ antigravity/
 - Functional vs. Simulated Feature Status: [`/docs/FEATURE_STATUS.md`](docs/FEATURE_STATUS.md)
 - Visual Verification Screenshots: [`/docs/screenshots/`](docs/screenshots/)
 - Specifications: [`/docs/spec/`](docs/spec/)
+
